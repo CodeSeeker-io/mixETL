@@ -1,0 +1,29 @@
+{
+  "name": "mixetl",
+  "version": "1.0.0",
+  "description": "A reverse ETL tool that takes clean, processed data from Google Sheets and pushes into Mixpanel.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeSeeker-io/MixETL.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeSeeker-io/MixETL/issues"
+  },
+  "homepage": "https://github.com/CodeSeeker-io/MixETL#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "fetch": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.2.3",
+    "jest": "^29.3.1",
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.9.3"
+  }
+}
