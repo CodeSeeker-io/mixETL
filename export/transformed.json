@@ -1,0 +1,10 @@
+{
+  "events": [{
+    "event": "testEvent1",
+    "properties": {
+      "time": 1670003123567,
+      "distinct_id": "1670003123567",
+      "$insert_id": "1670003123567"
+    }
+  }]
+}

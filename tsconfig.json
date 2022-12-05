@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "noImplicitAny": true,
     "removeComments": true,
     "esModuleInterop": true,
   },
-  "include": ["./**/*.ts"],
+  "include": [
+    "./**/*.ts", 
+    ".api/apis/mixpaneldevdocs/openapi.json",
+    "./.api/apis/mixpaneldevdocs/index.ts"
+  ],
   "exclude": [
-    "node_modules/**/*"
-  ]
+    "node_modules/**/*",
+    "./api/apis/mixpaneldevdocs/node_modules/**/*"
+  ],
 }
