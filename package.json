@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "npm install && npm run mixpanel-dependencies",
-    "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js",
+    "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
     "export": "ts-node --esm export/export.ts",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"
