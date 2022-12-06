@@ -1,16 +1,10 @@
-'use strict';
-var __importDefault =
-  (this && this.__importDefault) ||
-  function (mod) {
-    return mod && mod.__esModule ? mod : { default: mod };
-  };
-var oas_1 = __importDefault(require('oas'));
-var core_1 = __importDefault(require('api/dist/core'));
-var openapi_json_1 = __importDefault(require('./openapi.json'));
-var SDK = /** @class */ (function () {
-  function SDK() {
-    this.spec = oas_1.default.init(openapi_json_1.default);
-    this.core = new core_1.default(this.spec, 'mixpaneldevdocs/1.0.0 (api/5.0.4)');
+import Oas from 'oas';
+import APICore from 'api/dist/core';
+import definition from './openapi.json';
+class SDK {
+  constructor() {
+    this.spec = Oas.init(definition);
+    this.core = new APICore(this.spec, 'mixpaneldevdocs/1.0.0 (api/5.0.4)');
   }
   /**
    * Optionally configure various options that the SDK allows.
@@ -19,9 +13,9 @@ var SDK = /** @class */ (function () {
    * @param config.timeout Override the default `fetch` request timeout of 30 seconds. This number
    * should be represented in milliseconds.
    */
-  SDK.prototype.config = function (config) {
+  config(config) {
     this.core.setConfig(config);
-  };
+  }
   /**
    * If the API you're using requires authentication you can supply the required credentials
    * through this method and the library will magically determine how they should be used
@@ -43,15 +37,10 @@ var SDK = /** @class */ (function () {
    * @see {@link https://spec.openapis.org/oas/v3.1.0#fixed-fields-22}
    * @param values Your auth credentials for the API; can specify up to two strings or numbers.
    */
-  SDK.prototype.auth = function () {
-    var _a;
-    var values = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-      values[_i] = arguments[_i];
-    }
-    (_a = this.core).setAuth.apply(_a, values);
+  auth(...values) {
+    this.core.setAuth(...values);
     return this;
-  };
+  }
   /**
    * If the API you're using offers alternate server URLs, and server variables, you can tell
    * the SDK which one to use with this method. To use it you can supply either one of the
@@ -71,12 +60,9 @@ var SDK = /** @class */ (function () {
    * @param url Server URL
    * @param variables An object of variables to replace into the server URL.
    */
-  SDK.prototype.server = function (url, variables) {
-    if (variables === void 0) {
-      variables = {};
-    }
+  server(url, variables = {}) {
     this.core.setServer(url, variables);
-  };
+  }
   /**
    * Send batches of events from your servers to Mixpanel.
    * ***
@@ -341,9 +327,9 @@ var SDK = /** @class */ (function () {
    *
    * @summary Import Events
    */
-  SDK.prototype.importEvents = function (body, metadata) {
+  importEvents(body, metadata) {
     return this.core.fetch('/import', 'post', body, metadata);
-  };
+  }
   /**
    * Track events to Mixpanel from client devices. We recommend using one of our client-side
    * SDKs instead of using /track directly, as our SDKs provide queueing, retrying, batching,
@@ -396,9 +382,9 @@ var SDK = /** @class */ (function () {
    *
    * @summary Track Events
    */
-  SDK.prototype.trackEvent = function (body, metadata) {
+  trackEvent(body, metadata) {
     return this.core.fetch('/track', 'post', body, metadata);
-  };
+  }
   /**
    * Takes a JSON object containing names and values of profile properties. If the profile
    * does not exist, it creates it with these properties. If it does exist, it sets the
@@ -406,18 +392,18 @@ var SDK = /** @class */ (function () {
    *
    * @summary Set Property
    */
-  SDK.prototype.profileSet = function (body, metadata) {
+  profileSet(body, metadata) {
     return this.core.fetch('/engage#profile-set', 'post', body, metadata);
-  };
+  }
   /**
    * Works just like "$set", except it will not overwrite existing property values. This is
    * useful for properties like "First login date".
    *
    * @summary Set Property Once
    */
-  SDK.prototype.profileSetPropertyOnce = function (body, metadata) {
+  profileSetPropertyOnce(body, metadata) {
     return this.core.fetch('/engage#profile-set-once', 'post', body, metadata);
-  };
+  }
   /**
    * Takes a JSON object containing keys and numerical values. $add will increment the value
    * of a user profile property. When processed, the property values are added to the
@@ -428,18 +414,18 @@ var SDK = /** @class */ (function () {
    *
    * @summary Increment Numerical Property
    */
-  SDK.prototype.profileNumericalAdd = function (body, metadata) {
+  profileNumericalAdd(body, metadata) {
     return this.core.fetch('/engage#profile-numerical-add', 'post', body, metadata);
-  };
+  }
   /**
    * Adds the specified values to a list property on a user profile and ensures that those
    * values only appear once. The profile is created if it does not exist.
    *
    * @summary Union To List Property
    */
-  SDK.prototype.userProfileUnion = function (body, metadata) {
+  userProfileUnion(body, metadata) {
     return this.core.fetch('/engage#profile-union', 'post', body, metadata);
-  };
+  }
   /**
    * Takes a JSON object containing keys and values, and appends each to a list associated
    * with the corresponding property name. $appending to a property that doesn't exist will
@@ -447,27 +433,27 @@ var SDK = /** @class */ (function () {
    *
    * @summary Append to List Property
    */
-  SDK.prototype.profileAppendToListProperty = function (body, metadata) {
+  profileAppendToListProperty(body, metadata) {
     return this.core.fetch('/engage#profile-list-append', 'post', body, metadata);
-  };
+  }
   /**
    * Takes a JSON object containing keys and values. The value in the request is removed from
    * the existing list on the user profile. If it does not exist, no updates are made.
    *
    * @summary Remove from List Property
    */
-  SDK.prototype.profileRemoveFromListProperty = function (body, metadata) {
+  profileRemoveFromListProperty(body, metadata) {
     return this.core.fetch('/engage#profile-list-remove', 'post', body, metadata);
-  };
+  }
   /**
    * Takes a JSON list of string property names, and permanently removes the properties and
    * their values from a profile.
    *
    * @summary Delete Property
    */
-  SDK.prototype.profileDeleteProperty = function (body, metadata) {
+  profileDeleteProperty(body, metadata) {
     return this.core.fetch('/engage#profile-unset', 'post', body, metadata);
-  };
+  }
   /**
    * Send a batch of profile updates. Instead of sending a single JSON object as the data
    * query parameter, send a JSON list of objects as the data parameter of an
@@ -475,9 +461,9 @@ var SDK = /** @class */ (function () {
    *
    * @summary Update Multiple Profiles
    */
-  SDK.prototype.profileBatchUpdate = function (body, metadata) {
+  profileBatchUpdate(body, metadata) {
     return this.core.fetch('/engage#profile-batch-update', 'post', body, metadata);
-  };
+  }
   /**
    * Permanently delete the profile from Mixpanel, along with all of its properties. The
    * $delete object value is ignored - the profile is determined by the $distinct_id from the
@@ -489,52 +475,52 @@ var SDK = /** @class */ (function () {
    *
    * @summary Delete Profile
    */
-  SDK.prototype.deleteProfile = function (body, metadata) {
+  deleteProfile(body, metadata) {
     return this.core.fetch('/engage#profile-delete', 'post', body, metadata);
-  };
+  }
   /**
    * Updates or adds properties to a group profile. The profile is created if it does not
    * exist.
    *
    * @summary Update Property
    */
-  SDK.prototype.groupSetProperty = function (body, metadata) {
+  groupSetProperty(body, metadata) {
     return this.core.fetch('/groups#group-set', 'post', body, metadata);
-  };
+  }
   /**
    * Adds properties to a group only if the property is not already set. The profile is
    * created if it does not exist.
    *
    * @summary Set Property Once
    */
-  SDK.prototype.groupSetPropertyOnce = function (body, metadata) {
+  groupSetPropertyOnce(body, metadata) {
     return this.core.fetch('/groups#group-set-once', 'post', body, metadata);
-  };
+  }
   /**
    * Unsets specific properties on the group profile.
    *
    * @summary Delete Property
    */
-  SDK.prototype.groupDeleteProperty = function (body, metadata) {
+  groupDeleteProperty(body, metadata) {
     return this.core.fetch('/groups#group-unset', 'post', body, metadata);
-  };
+  }
   /**
    * Removes a specific value in a list property.
    *
    * @summary Remove from List Property
    */
-  SDK.prototype.groupRemoveFromListProperty = function (body, metadata) {
+  groupRemoveFromListProperty(body, metadata) {
     return this.core.fetch('/groups#group-remove-from-list', 'post', body, metadata);
-  };
+  }
   /**
    * Adds the specified values to a list property on a group profile and ensures that those
    * values only appear once. The profile is created if it does not exist.
    *
    * @summary Union To List Property
    */
-  SDK.prototype.groupUnion = function (body, metadata) {
+  groupUnion(body, metadata) {
     return this.core.fetch('/groups#group-union', 'post', body, metadata);
-  };
+  }
   /**
    * Send a batch of group profile updates. Instead of sending a single JSON object as the
    * data query parameter, send a JSON list of objects as the data parameter of an
@@ -542,25 +528,25 @@ var SDK = /** @class */ (function () {
    *
    * @summary Batch Update Group Profiles
    */
-  SDK.prototype.groupBatchUpdate = function (body, metadata) {
+  groupBatchUpdate(body, metadata) {
     return this.core.fetch('/groups#group-batch-update', 'post', body, metadata);
-  };
+  }
   /**
    * Deletes a group profile from Mixpanel.
    *
    * @summary Delete Group
    */
-  SDK.prototype.deleteGroup = function (body, metadata) {
+  deleteGroup(body, metadata) {
     return this.core.fetch('/groups#group-delete', 'post', body, metadata);
-  };
+  }
   /**
    * Get a list of Lookup Tables defined in the project.
    *
    * @summary List Lookup Tables
    */
-  SDK.prototype.listLookupTables = function (metadata) {
+  listLookupTables(metadata) {
     return this.core.fetch('/lookup-tables', 'get', metadata);
-  };
+  }
   /**
    * Replace the contents of an existing Lookup Table.
    * ***
@@ -652,12 +638,11 @@ var SDK = /** @class */ (function () {
    *
    * @summary Replace a Lookup Table
    */
-  SDK.prototype.replaceLookupTable = function (body, metadata) {
+  replaceLookupTable(body, metadata) {
     return this.core.fetch('/lookup-tables/{id}', 'put', body, metadata);
-  };
-  return SDK;
-})();
-var createSDK = (function () {
+  }
+}
+const createSDK = (() => {
   return new SDK();
 })();
-module.exports = createSDK;
+export default createSDK;
