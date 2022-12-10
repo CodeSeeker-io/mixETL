@@ -1,0 +1,3522 @@
+{
+  "openapi": "3.0.2",
+  "x-readme-deploy-id": "ingestion",
+  "info": {
+    "title": "Ingestion API",
+    "description": "APIs allowing for event-based tracking and user profile handling.",
+    "version": "1.0.0",
+    "contact": {
+      "url": "https://mixpanel.com/get-support"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{region}.mixpanel.com",
+      "description": "Mixpanel's data collection server.",
+      "variables": {
+        "region": {
+          "default": "api",
+          "enum": [
+            "api",
+            "api-eu"
+          ],
+          "description": "The server location to be used:\n  * `api` - The default (US) servers used for most projects\n  * `api-eu` - EU servers if you are enrolled in EU Data Residency\n"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "Events",
+      "description": "Track events."
+    },
+    {
+      "name": "Group Profiles",
+      "description": "Manage groups and their properties"
+    },
+    {
+      "name": "Identities",
+      "description": "Register or merge users with a new identity."
+    },
+    {
+      "name": "Lookup Tables",
+      "description": "Enrich existing event and profile properties"
+    },
+    {
+      "name": "User Profiles",
+      "description": "Manage profiles and their properties"
+    }
+  ],
+  "paths": {
+    "/import": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "operationId": "import-events",
+        "security": [
+          {
+            "ServiceAccount": []
+          }
+        ],
+        "summary": "Import Events",
+        "description": "Send batches of events from your servers to Mixpanel.\n***\n[block:api-header]\n{\n  \"title\": \"Request Format\"\n}\n[/block]\nEach request ingests a batch of events into Mixpanel. We accept up to 2000 events and 2MB uncompressed per request. Events are part of the request body. We support Content-Type `application/json` or `application/x-ndjson`:\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"[\\n  {\\\"event\\\": \\\"Signup\\\", \\\"properties\\\": {\\\"time\\\": 1618716477000,\\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\\"Referred by\\\": \\\"Friend\\\",\\\"URL\\\": \\\"mixpanel.com/signup\\\"}},\\n  {\\\"event\\\": \\\"Purchase\\\", \\\"properties\\\": {\\\"time\\\": 1618716477000,\\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\\"$insert_id\\\": \\\"935d87b1-00cd-41b7-be34-b9d98dd08b42\\\",\\\"Item\\\": \\\"Coffee\\\", \\\"Amount\\\": 5.0}}\\n]\",\n      \"language\": \"json\",\n      \"name\": \"JSON\"\n    },\n    {\n      \"code\": \"{\\\"event\\\": \\\"Signup\\\", \\\"properties\\\": {\\\"time\\\": 1618716477000,\\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\\"Referred by\\\": \\\"Friend\\\",\\\"URL\\\": \\\"mixpanel.com/signup\\\"}}\\n{\\\"event\\\": \\\"Purchase\\\", \\\"properties\\\": {\\\"time\\\": 1618716477000,\\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\\"$insert_id\\\": \\\"935d87b1-00cd-41b7-be34-b9d98dd08b42\\\",\\\"Item\\\": \\\"Coffee\\\", \\\"Amount\\\": 5.0}}\\n\",\n      \"language\": \"json\",\n      \"name\": \"ndJSON\"\n    }\n  ]\n}\n[/block]\nWe also support `Content-Encoding: gzip` to reduce network egress.\n[block:api-header]\n{\n  \"title\": \"Authentication\"\n}\n[/block]\n/import requires an Owner or Admin [Service Account](ref:service-accounts). project_id, service account username and service account password are required to authenticate a request.\n\nNote: /import also supports [Project Secret](ref:project-secret) for legacy reasons. If you do not specify project_id, we will use secret auth.\n[block:api-header]\n{\n  \"title\": \"Validation\"\n}\n[/block]\n/import validates the supplied events and returns a 400 status code if _any_ of the events fail validation with details of the error. If some events pass validation and others fail, we will ingest the events that pass validation. When you encounter a 400 error in production, simply log the JSON response, as it will contain the `$insert_id`s of the invalid events, which can be used to debug.\n\n### High-level requirements\n\n- Each event must be properly formatted JSON.\n- Each event must contain an event name, time, distinct_id, and $insert_id. These are used to deduplicate events, so that this endpoint can be safely retried.\n- Each event must be smaller than 1MB of uncompressed JSON.\n- Each event must have fewer than 255 properties.\n- All nested object properties must have fewer than 255 keys and max nesting depth is 3.\n- All array properties must have fewer than 255 elements.\n\n### Example of an event\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"{\\n  \\\"event\\\": \\\"Signed up\\\",\\n  \\\"properties\\\": {\\n    \\\"time\\\": 1618716477000,\\n    \\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\n    \\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\n    \\\"ip\\\": \\\"136.24.0.114\\\",\\n    \\\"Referred by\\\": \\\"Friend\\\",\\n    \\\"URL\\\": \\\"mixpanel.com/signup\\\",\\n  }\\n}\",\n      \"language\": \"json\"\n    }\n  ]\n}\n[/block]\n\n### event\n\nThis is the name of the event. If you're loading data from a data warehouse, we recommend using the name of the table as the name of the event.\n\nWe recommend keeping the number of unique event names relatively small and using properties for any variable context attached to the event. For example, instead of tracking events with names \"Paid Signup\" and \"Free Signup\", we would recommend tracking an event called \"Signup\" and having a property \"Account Type\" with value \"paid\" or \"free\".\n\n### **properties**\n\nThis is a JSON object representing all the properties about the event. If you're loading data from a data warehouse, we recommend using column names as the names of properties.\n\n### properties.time\n\nThe time at which the event occurred, in seconds or milliseconds since epoch. We require a value for time. We will reject events with time values that are before 1971-01-01 or more than 1 hour in the future as measured on our servers.\n\n### properties.distinct_id\n\ndistinct_id identifies the user who performed the event. distinct_id must be specified on every event, as it is crucial for Mixpanel to perform behavioral analysis (unique users, funnels, retention, cohorts) correctly and efficiently.\n\nIf the event is not associated with any user, set distinct_id to the empty string. Events with an empty distinct_id will be excluded from all behavioral analysis.\n\nTo prevent accidental implementation mistakes, we disallow the following values for distinct_id:\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"- 00000000-0000-0000-0000-000000000000\\n- anon\\n- anonymous\\n- nil\\n- none\\n- null\\n- n/a\\n- na\\n- undefined\\n- unknown\\n- <nil>\\n- 0\\n- -1\\n- true\\n- false\\n- []\\n- {}\\n\",\n      \"language\": \"text\"\n    }\n  ]\n}\n[/block]\n\n### properties.$insert_id\n\nWe require that $insert_id be specified on every event. $insert_id provides a unique identifier for the event, which we use for deduplication. Events with identical values for (event, time, distinct_id, $insert_id) are considered duplicates and only one of them will be surfaced in queries.\n\n$insert_ids must be ≤ 36 bytes and contain only alphanumeric characters or \"-\". We also disallow any value for $insert_id from the list of invalid IDs provided for distinct_id above.\n\n### Example of a validation error\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"{\\n  \\\"code\\\": 400,\\n  \\\"error\\\": \\\"some data points in the request failed validation\\\",\\n  \\\"failed_records\\\": [\\n    {\\n      \\\"index\\\": 0,\\n      \\\"$insert_id\\\": \\\"8a66058c-a56d-4ef6-8123-28b7c9f7e82f\\\",\\n      \\\"field\\\": \\\"properties.time\\\",\\n      \\\"message\\\": \\\"properties.time' is invalid: must be specified as seconds since epoch\\\"\\n    },\\n    {\\n      \\\"index\\\": 3,\\n      \\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\n      \\\"field\\\": \\\"properties.utm_source\\\",\\n      \\\"message\\\": \\\"properties.utm_source is invalid: string should be valid utf8\\\"\\n    },\\n  ],\\n  \\\"num_records_imported\\\": 23,\\n  \\\"status\\\": \\\"Bad Request\\\"\\n}\",\n      \"language\": \"json\"\n    }\n  ]\n}\n[/block]\nWhen any single event in the batch does not pass validation, we return a 400 status code and a response that looks like the above.\n\n`failed_records` includes one row for each of the failed events, with details about the error we found. If some of the rows passed validation, we will ingest them and return their count in `num_records_imported`.\n[block:api-header]\n{\n  \"title\": \"GeoIP Enrichment\"\n}\n[/block]\nIf you supply a property `ip` with an IP address, Mixpanel will automatically do a GeoIP lookup and replace the `ip` property with geographic properties (City, Country, Region). These properties can be used in our UI to segment events geographically.\n\nThis is an example of an event before and after enrichment:\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"{\\n  \\\"event\\\": \\\"Signed up\\\",\\n  \\\"properties\\\": {\\n    \\\"time\\\": 1618716477000,\\n    \\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\n    \\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\n    \\\"ip\\\": \\\"136.24.0.114\\\",\\n    \\\"Referred by\\\": \\\"Friend\\\",\\n    \\\"URL\\\": \\\"mixpanel.com/signup\\\",\\n  }\\n}\",\n      \"language\": \"json\",\n      \"name\": \"Pre-Enrichment\"\n    },\n    {\n      \"code\": \"{\\n  \\\"event\\\": \\\"Signed up\\\",\\n  \\\"properties\\\": {\\n    \\\"time\\\": 1618716477000,\\n    \\\"distinct_id\\\": \\\"91304156-cafc-4673-a237-623d1129c801\\\",\\n    \\\"$insert_id\\\": \\\"29fc2962-6d9c-455d-95ad-95b84f09b9e4\\\",\\n    \\\"Referred by\\\": \\\"Friend\\\",\\n    \\\"URL\\\": \\\"mixpanel.com/signup\\\",\\n    \\\"$city\\\": \\\"San Francisco\\\",\\n    \\\"$region\\\": \\\"California\\\",\\n    \\\"mp_country_code\\\": \\\"US\\\"\\n  }\\n}\",\n      \"language\": \"json\",\n      \"name\": \"Post-Enrichment\"\n    }\n  ]\n}\n[/block]\n\n[block:api-header]\n{\n  \"title\": \"Rate Limits\"\n}\n[/block]\nTo ensure real-time ingestion and quality-of-service, we have a rate limit of 2GB of uncompressed JSON/minute or ~30k events per second, measured on a rolling 1 minute basis. \n\nWe recommend the following when it comes to sending data to our API at scale:\n\n* Send data as quickly as possible with concurrent clients until the server returns 429. We see the best results with 10-20 concurrent clients sending 2K events per batch.\n* When you see 429s, employ an [exponential backoff with jitter](https://docs.aws.amazon.com/general/latest/gr/api-retries.html) strategy. We recommend starting with a backoff of 2s and doubling backoff until 60s, with 1-5s of jitter.\n* We recommend gzip compression and using `Content-Encoding: gzip` to reduce network egress and transfer time.\n* In the rare event that our API returns a 502 or 503 status code, we recommend employing the same exponential backoff strategy as with 429s.\n* Please do not retry validation errors (400 status code), as they will consistently fail and count toward the rate limit.\n\n*If you are an enterprise customer and require a higher limit for a 1-time backfill, please reach out to your sales representative with your project_id and use-case.*\n[block:api-header]\n{\n  \"title\": \"Common Issues\"\n}\n[/block]\n$insert_id is required on all events. This makes it safe to retry /import requests. If your events don't already have a unique ID (eg: a UUID/GUID), we recommend computing a hash of some set of properties that make the event semantically unique (eg: distinct_id + timestamp + some other property) and using the first 36 characters of that hash as the $insert_id.\n\nWe truncate all strings down to 255 characters. Here's what we recommend for the various cases in which this typically happens:\n\n- URLs: We recommend parsing the URL and tracking its individual components (host, path, url params) as properties. This is more useful in analysis, as you can segment events by hostname or a particular URL parameter.\n- JSON encoded strings: Sometimes a long string may be a JSON object encoded as a string. We recommend parsing the JSON and flattening it into properties to send with the event. This is similarly much more useful in analysis, as you can filter or breakdown by any key within the JSON.\n- Free text / user generated content: Some long fields may include full-text (eg: a search term or a comment). If this property isn't useful for analysis, we recommend excluding it from tracking to Mixpanel to avoid accidentally sending over any PII.\n[block:api-header]\n{\n  \"title\": \"Guides\"\n}\n[/block]\nSee our Cloud Ingestion guides for example usage of this API to integrate with  [Google Pub/Sub](doc:google-pubsub), [Amazon S3](doc:amazon-s3), or [Google Cloud Storage](doc:gcs-import).\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "strict",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "1",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "description": "When set to 1 (recommended), Mixpanel will validate the batch and return errors per event that failed."
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "default": "<YOUR_PROJECT_ID>",
+              "type": "string"
+            },
+            "description": "The Mixpanel project_id, used to authenticate service account credentials."
+          },
+          {
+            "in": "header",
+            "name": "Content-Type",
+            "schema": {
+              "type": "string",
+              "default": "application/json",
+              "enum": [
+                "application/json",
+                "application/x-ndjson"
+              ]
+            }
+          },
+          {
+            "in": "header",
+            "name": "Content-Encoding",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "gzip"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "event",
+                    "properties"
+                  ],
+                  "properties": {
+                    "event": {
+                      "type": "string",
+                      "title": "event",
+                      "description": "The name of the event."
+                    },
+                    "properties": {
+                      "type": "object",
+                      "title": "properties",
+                      "description": "A JSON object containing properties of the event.",
+                      "required": [
+                        "time",
+                        "$insert_id",
+                        "distinct_id"
+                      ],
+                      "properties": {
+                        "time": {
+                          "type": "integer",
+                          "title": "time",
+                          "description": "The time at which the event occurred, in seconds or milliseconds since UTC epoch."
+                        },
+                        "distinct_id": {
+                          "type": "string",
+                          "title": "distinct_id",
+                          "description": "The unique identifier of the user who performed the event."
+                        },
+                        "$insert_id": {
+                          "type": "string",
+                          "title": "$insert_id",
+                          "description": "A unique identifier for the event, used for deduplication. Events with identical values for (event, time, distinct_id, $insert_id) are considered duplicates; only the latest ingested one will be considered in queries."
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A 200 response indicates all records were successfully ingested.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "num_records_imported": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 200,
+                    "num_records_imported": 2000,
+                    "status": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A 400 response indicates that some records failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "num_records_imported": {
+                      "type": "integer"
+                    },
+                    "failed_records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "number"
+                          },
+                          "insert_id": {
+                            "type": "string"
+                          },
+                          "field": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "code": 400,
+                    "num_records_imported": 999,
+                    "status": "Bad Request",
+                    "failed_records": [
+                      {
+                        "index": 0,
+                        "insert_id": "13c0b661-f48b-51cd-ba54-97c5999169c0",
+                        "field": "properties.time",
+                        "message": "'properties.time' is invalid: must be specified as seconds since epoch"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A 401 response indicates invalid credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 401,
+                    "error": "Invalid credentials",
+                    "status": "Unauthorized"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "A 413 response indicates that the payload is too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 413,
+                    "error": "request exceeds max limit of 2097152 bytes",
+                    "status": "Request Entity Too Large"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "A 429 response indicates rate limits have been exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 429,
+                    "error": "Project exceeded rate limits. Please retry the request with exponential backoff.",
+                    "status": "Too Many Requests"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/track": {
+      "post": {
+        "operationId": "track-event",
+        "tags": [
+          "Events"
+        ],
+        "summary": "Track Events",
+        "description": "Track events to Mixpanel from client devices. We recommend using one of our client-side SDKs instead of using /track directly, as our SDKs provide queueing, retrying, batching, and more.\n***\n[block:api-header]\n{\n  \"title\": \"When to use /track vs /import\"\n}\n[/block]\nTypically, we recommend using /import for server-side integrations as it is more scalable and supports ingesting historical data. We only recommend /track for client-side tracking in an environment for which we don't have SDK support or if you're sending data via some other untrusted environment (eg: third-party webhooks that send data to Mixpanel).\n[block:parameters]\n{\n  \"data\": {\n    \"h-0\": \"\",\n    \"h-1\": \"/track\",\n    \"h-2\": \"/import\",\n    \"0-0\": \"Events per request\",\n    \"0-1\": \"50\",\n    \"0-2\": \"2000\",\n    \"1-0\": \"Authentication\",\n    \"1-1\": \"Project Token, intended for untrusted clients.\",\n    \"1-2\": \"Project Secret, intended for server-side integration.\",\n    \"2-0\": \"Compression\",\n    \"2-1\": \"None\",\n    \"2-2\": \"Gzip allowed\",\n    \"3-0\": \"Content-Type\",\n    \"3-1\": \"application/x-www-form-urlencoded\",\n    \"3-2\": \"application/json or application/x-ndjson\",\n    \"4-0\": \"Ingesting historical events\",\n    \"4-1\": \"Last 5 days only.\",\n    \"4-2\": \"Any time after 1971-01-01.\"\n  },\n  \"cols\": 3,\n  \"rows\": 5\n}\n[/block]\n\n[block:api-header]\n{\n  \"title\": \"Limits\"\n}\n[/block]\nThe limits for track are the same as /import, [see here](https://developer.mixpanel.com/reference/import-events#rate-limits).\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ip",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will use the ip address of the incoming request and compute a distinct_id using a hash function if no distinct_id is provided. This is different from providing a `properties.ip` value in the Event Object."
+          },
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "img",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will serve a 1x1 transparent pixel image as a response to the request. This is useful for adding [Pixel Tracking](https://en.wikipedia.org/wiki/Web_beacon) in places that javascript is not supported."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "event",
+                    "properties"
+                  ],
+                  "properties": {
+                    "event": {
+                      "type": "string",
+                      "title": "event",
+                      "description": "The name of the event."
+                    },
+                    "properties": {
+                      "type": "object",
+                      "title": "properties",
+                      "description": "A JSON object containing properties of the event.",
+                      "properties": {
+                        "token": {
+                          "type": "string",
+                          "title": "token",
+                          "description": "Project token."
+                        },
+                        "time": {
+                          "type": "integer",
+                          "title": "time",
+                          "description": "The time at which the event occurred, in seconds or milliseconds since UTC epoch."
+                        },
+                        "distinct_id": {
+                          "type": "string",
+                          "title": "distinct_id",
+                          "description": "The unique identifier of the user who performed the event."
+                        },
+                        "$insert_id": {
+                          "type": "string",
+                          "title": "$insert_id",
+                          "description": "A unique identifier for the event, used for deduplication. Events with identical values for (event, time, distinct_id, $insert_id) are considered duplicates; only the latest ingested one will be considered in queries."
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "encoding": {
+                "data": {
+                  "contentType": "text/plain"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-set": {
+      "post": {
+        "operationId": "profile-set",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Set Property",
+        "description": "Takes a JSON object containing names and values of profile properties. If the profile does not exist, it creates it with these properties. If it does exist, it sets the properties to these values, overwriting existing values.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $set operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$set"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$set": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-set-once": {
+      "post": {
+        "operationId": "profile-set-property-once",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Set Property Once",
+        "description": "Works just like \"$set\", except it will not overwrite existing property values. This is useful for properties like \"First login date\".",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $set_once operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$set_once"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$set_once": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-numerical-add": {
+      "post": {
+        "operationId": "profile-numerical-add",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Increment Numerical Property",
+        "description": "Takes a JSON object containing keys and numerical values. $add will increment the value of a user profile property. When processed, the property values are added to the existing values of the properties on the profile. If the property is not present on the profile, the value will be added to 0. It is possible to decrement by calling \"$add\" with negative values. This is useful for maintaining the values of properties like \"Number of Logins\" or \"Files Uploaded\".",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $add operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$add"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$add": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-union": {
+      "post": {
+        "operationId": "user-profile-union",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Union To List Property",
+        "description": "Adds the specified values to a list property on a user profile and ensures that those values only appear once. The profile is created if it does not exist.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and a $union operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$union"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$union": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "additionalProperties": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-list-append": {
+      "post": {
+        "operationId": "profile-append-to-list-property",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Append to List Property",
+        "description": "Takes a JSON object containing keys and values, and appends each to a list associated with the corresponding property name. $appending to a property that doesn't exist will result in assigning a list with one element to that property.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $append operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$append"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$append": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-list-remove": {
+      "post": {
+        "operationId": "profile-remove-from-list-property",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Remove from List Property",
+        "description": "Takes a JSON object containing keys and values. The value in the request is removed from the existing list on the user profile. If it does not exist, no updates are made.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $remove operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$remove"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$remove": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-unset": {
+      "post": {
+        "operationId": "profile-delete-property",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Delete Property",
+        "description": "Takes a JSON list of string property names, and permanently removes the properties and their values from a profile.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, and $unset operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$unset"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$unset": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Profile properties to be removed.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-batch-update": {
+      "post": {
+        "operationId": "profile-batch-update",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Update Multiple Profiles",
+        "description": "Send a batch of profile updates. Instead of sending a single JSON object as the data query parameter, send a JSON list of objects as the data parameter of an application/json POST or GET request body",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "blob",
+                "description": "A JSON list of update objects, each with a $token, $distinct_id, and an operation.",
+                "default": "[\n    {\n        \"$token\": \"YOUR_PROJECT_TOKEN\",\n        \"$distinct_id\": \"13793\",\n        \"$add\": { \"Coins Gathered\": 12 }\n    },\n    {\n        \"$token\": \"YOUR_PROJECT_TOKEN\",\n        \"$distinct_id\": \"13794\",\n        \"$add\": { \"Coins Gathered\": 13 }\n    }\n]\n"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/engage#profile-delete": {
+      "post": {
+        "operationId": "delete-profile",
+        "tags": [
+          "User Profiles"
+        ],
+        "summary": "Delete Profile",
+        "description": "Permanently delete the profile from Mixpanel, along with all of its properties. The $delete object value is ignored - the profile is determined by the $distinct_id from the request itself.\n\nIf you have duplicate profiles, use property $ignore_alias set to true so that you don't delete the original profile when trying to delete the duplicate (as they pass in the alias as the distinct_id).\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          },
+          {
+            "in": "query",
+            "name": "redirect",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+          },
+          {
+            "in": "query",
+            "name": "callback",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $distinct_id, $ignore_alias and a $delete operation object.",
+                  "required": [
+                    "$token",
+                    "$distinct_id",
+                    "$delete"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$distinct_id": {
+                      "type": "string",
+                      "default": "13793"
+                    },
+                    "$delete": {
+                      "type": "string",
+                      "nullable": true,
+                      "default": "null"
+                    },
+                    "$ignore_alias": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-set": {
+      "post": {
+        "operationId": "group-set-property",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Update Property",
+        "description": "Updates or adds properties to a group profile. The profile is created if it does not exist.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $group_key, $group_id, and $set operation object.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$set"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$set": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-set-once": {
+      "post": {
+        "operationId": "group-set-property-once",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Set Property Once",
+        "description": "Adds properties to a group only if the property is not already set. The profile is created if it does not exist.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $group_key, $group_id, and $set_once operation object.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$set_once"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$set_once": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-unset": {
+      "post": {
+        "operationId": "group-delete-property",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Delete Property",
+        "description": "Unsets specific properties on the group profile.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $group_key, $group_id, and $unset operation list.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$unset"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$unset": {
+                      "type": "array",
+                      "minItems": 1,
+                      "description": "Profile properties to be removed.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-remove-from-list": {
+      "post": {
+        "operationId": "group-remove-from-list-property",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Remove from List Property",
+        "description": "Removes a specific value in a list property.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $group_key, $group_id, and $remove operation object.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$remove"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$remove": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-union": {
+      "post": {
+        "operationId": "group-union",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Union To List Property",
+        "description": "Adds the specified values to a list property on a group profile and ensures that those values only appear once. The profile is created if it does not exist.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with a $token, $group_key, $group_id, and a union operation object.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$unset"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$union": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "additionalProperties": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "oneOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-batch-update": {
+      "post": {
+        "operationId": "group-batch-update",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Batch Update Group Profiles",
+        "description": "Send a batch of group profile updates. Instead of sending a single JSON object as the data query parameter, send a JSON list of objects as the data parameter of an application/x-www-form-urlencoded POST or GET request body",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "format": "blob",
+                "description": "A JSON list of update objects, each with a $token, $group_key, $group_id, and an operation.",
+                "default": "[\n    {\n        \"$token\": \"YOUR_PROJECT_TOKEN\",\n        \"$group_key\": \"Company\",\n        \"$group_id\": \"Mixpanel\",\n        \"$set\": {\n            \"Address\": \"1313 Mockingbird Lane\"\n        }\n    },\n    {\n        \"$token\": \"YOUR_PROJECT_TOKEN\",\n        \"$group_key\": \"Company\",\n        \"$group_id\": \"Wayne Enterprises\",\n        \"$set_once\": {\n            \"Address\": \"Wayne Tower, Gotham City\"\n        }\n    }\n]\n"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups#group-delete": {
+      "post": {
+        "operationId": "delete-group",
+        "tags": [
+          "Group Profiles"
+        ],
+        "summary": "Delete Group",
+        "description": "Deletes a group profile from Mixpanel.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "verbose",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "A JSON update object, with $token, $group_key, and $group_id values and a $delete key.",
+                  "required": [
+                    "$token",
+                    "$group_key",
+                    "$group_id",
+                    "$set"
+                  ],
+                  "properties": {
+                    "$token": {
+                      "type": "string",
+                      "default": "YOUR_PROJECT_TOKEN"
+                    },
+                    "$group_key": {
+                      "type": "string",
+                      "default": "Company"
+                    },
+                    "$group_id": {
+                      "type": "string",
+                      "default": "Mixpanel"
+                    },
+                    "$delete": {
+                      "type": "string",
+                      "nullable": true,
+                      "default": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "integer",
+                  "enum": [
+                    1,
+                    0
+                  ]
+                },
+                "examples": {
+                  "Valid Data": {
+                    "value": 1
+                  },
+                  "Invalid Data": {
+                    "value": 0
+                  }
+                }
+              }
+            },
+            "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lookup-tables": {
+      "get": {
+        "operationId": "list-lookup-tables",
+        "tags": [
+          "Lookup Tables"
+        ],
+        "security": [
+          {
+            "ServiceAccount": []
+          }
+        ],
+        "summary": "List Lookup Tables",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "default": "<YOUR_PROJECT_ID>",
+              "type": "string"
+            },
+            "description": "The Mixpanel project_id, used to authenticate service account credentials."
+          }
+        ],
+        "description": "Get a list of Lookup Tables defined in the project.",
+        "responses": {
+          "200": {
+            "description": "The list of Lookup Tables.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "number"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "code": 200,
+                    "status": "OK",
+                    "results": [
+                      {
+                        "id": "55b4fb2b-e8de-466c-930f-8b36640b9b5e",
+                        "name": "Accounts"
+                      },
+                      {
+                        "id": "1297297a-43a7-4cac-82b0-635d2bd88aac",
+                        "name": "Product Catalog"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A 401 response indicates invalid credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 401,
+                    "error": "Invalid credentials",
+                    "status": "Unauthorized"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lookup-tables/{id}": {
+      "put": {
+        "operationId": "replace-lookup-table",
+        "tags": [
+          "Lookup Tables"
+        ],
+        "security": [
+          {
+            "ServiceAccount": []
+          }
+        ],
+        "summary": "Replace a Lookup Table",
+        "description": "Replace the contents of an existing Lookup Table.\n***\n[block:api-header]\n{\n  \"title\": \"Validation\"\n}\n[/block]\n* The first column of the lookup table is assumed to be the ID of the row. All ID values must be unique.\n* The first row of the lookup table is a header row. The values in the header must be unique, as each one uniquely identifies a column of the table. These will appear as properties of the lookup table in Mixpanel's UI.\n* The CSV must be valid according to RFC4180.\n* If the `Content-Encoding: gzip` header is supplied, the table will be decompressed before parsing.\n[block:api-header]\n{\n  \"title\": \"Types\"\n}\n[/block]\n* Integers or floats will be parsed as numbers.\n* RFC3339 timestamps (`2021-08-21T05:36:01Z`) will parsed as datetimes.\n* `true` or `false` (case-insensitive) will be parsed as boolean.\n* Empty fields (two adjacent commas) will be treated as `undefined`\n* Comma separated, quoted strings in square brackets (`\"[\"\"Free\"\",\"\"Paid\"\",\"\"Enterprise\"\"]\"`) will be parsed as list of strings.\n* All other values will be treated as strings.\n\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"id,artist,genre,is_platinum,name,num_listens,release_date,is_top_40,countries\\nc994bb,Drake,Pop,True,Hotline Bling,1700000000,2015-10-18T22:00:00,true,[]\\nd8d949,Gipsy Kings,Flamenco,False,Bamboleo,1170000,1987-07-12T05:00:00,false,\\\"[\\\"\\\"US\\\"\\\",\\\"\\\"CA\\\"\\\"]\\\"\\na43fb8,Daft Punk,House,False,Aerodynamic,41000000,2001-03-12T07:30:00,false,\\\"[\\\"\\\"IN\\\"\\\"]\\\"\\n\",\n      \"language\": \"text\",\n      \"name\": \"sample.csv\"\n    }\n  ]\n}\n[/block]\n\n[block:api-header]\n{\n  \"title\": \"Errors\"\n}\n[/block]\nLookup Tables are replaced in their entirety or not replaced at all. When the Lookup Table fails to meet the above validation, we return an error that looks as follows:\n[block:code]\n{\n  \"codes\": [\n    {\n      \"code\": \"{\\n  \\\"error\\\": \\\"some data points in the request failed validation\\\",\\n  \\\"failed_records\\\": [\\n    {\\n      \\\"index\\\": 2,\\n      \\\"message\\\": \\\"invalid row: row indexes 1 and 2 have the same primary key\\\"\\n    },\\n    {\\n      \\\"index\\\": 3,\\n      \\\"message\\\": \\\"invalid row: wrong number of fields\\\"\\n    }\\n  ],\\n  \\\"status\\\": 0\\n}\",\n      \"language\": \"json\"\n    }\n  ]\n}\n[/block]\nWe will return at most the first 10 rows that failed validation.\n[block:api-header]\n{\n  \"title\": \"Limits\"\n}\n[/block]\nThis endpoint will return a 429 error if called more than 100 times in a rolling 24 hour window. We recommend updating lookup tables at most hourly to stay within this limit.\n\nThis endpoint will return a 413 error if a Lookup Table exceeds 100MB uncompressed. In practice, this translates to 1-2M rows. If you have a lookup table that exceeds the limit, we recommend pruning the number of columns to those that are useful to analysis. Removing long URLs or user-generated content can bring a lookup table within this limit. If you still exceed the limit, please reach out to us at apis@mixpanel.com -- we'd love to hear your use case!\n[block:api-header]\n{\n  \"title\": \"Legacy API\"\n}\n[/block]\nOur [legacy lookup tables API](https://developer.mixpanel.com/v2.60/reference/lookup-tables) is now deprecated; we strongly recommend transitioning to this API.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "LOOKUP_TABLE_ID",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The ID of the lookup table to replace."
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "default": "<YOUR_PROJECT_ID>",
+              "type": "string"
+            },
+            "description": "The Mixpanel project_id, used to authenticate service account credentials."
+          },
+          {
+            "in": "header",
+            "name": "Content-Type",
+            "schema": {
+              "type": "string",
+              "default": "text/csv",
+              "enum": [
+                "text/csv"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/csv": {
+              "schema": {
+                "type": "string",
+                "format": "blob",
+                "default": "id,field1,field2\nkey1,v1,z1\nkey2,z1,z2\n"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A 200 response indicates all records were successfully ingested.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 200,
+                    "status": "OK"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A 400 response indicates that some records failed validation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "failed_records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "index": {
+                            "type": "number"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "example": {
+                    "code": 400,
+                    "error": "Some data points in the request failed validation.",
+                    "status": "Bad Request",
+                    "failed_records": [
+                      {
+                        "index": 2,
+                        "message": "primary key is required and cannot be blank"
+                      },
+                      {
+                        "index": 3,
+                        "message": "invalid row: wrong number of fields"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A 401 response indicates invalid credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 401,
+                    "error": "Invalid credentials",
+                    "status": "Unauthorized"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "A 404 response indicates that the entity to replace was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 200,
+                    "error": "Lookup table with id 'f077cb07-008a-4955-8a4a-b4c163db3a87' was not found.",
+                    "status": "Not Found"
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "A 413 response indicates that the payload is too large.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 413,
+                    "error": "request exceeds max limit of 2097152 bytes",
+                    "status": "Request Entity Too Large"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "A 429 response indicates rate limits have been exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "error": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "example": {
+                    "code": 429,
+                    "error": "Project exceeded rate limits. Please retry the request with exponential backoff.",
+                    "status": "Too Many Requests"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceAccount": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Service Account"
+      },
+      "ProjectSecret": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Project Secret"
+      }
+    },
+    "schemas": {
+      "ImportRequestParameters": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "strict": {
+                "allOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  {
+                    "description": "If present and equal to 1, Mixpanel will validate the provided records and return a JSON object with per-record error messages for records that fail validation."
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "error"
+            ]
+          }
+        }
+      },
+      "IntegerPropertyAsBooleanFlag": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "Strict": {
+        "type": "object",
+        "properties": {
+          "strict": {
+            "allOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              {
+                "description": "If present and equal to 1, Mixpanel will validate the provided records and return a JSON object with per-record error messages for records that fail validation."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "responses": {
+      "LookupTableList": {
+        "description": "The list of Lookup Tables.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "number"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "code": 200,
+                "status": "OK",
+                "results": [
+                  {
+                    "id": "55b4fb2b-e8de-466c-930f-8b36640b9b5e",
+                    "name": "Accounts"
+                  },
+                  {
+                    "id": "1297297a-43a7-4cac-82b0-635d2bd88aac",
+                    "name": "Product Catalog"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "LookupTableReceived": {
+        "description": "A 200 response indicates all records were successfully ingested.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 200,
+                "status": "OK"
+              }
+            }
+          }
+        }
+      },
+      "LookupTableInvalid": {
+        "description": "A 400 response indicates that some records failed validation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "failed_records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "number"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "code": 400,
+                "error": "Some data points in the request failed validation.",
+                "status": "Bad Request",
+                "failed_records": [
+                  {
+                    "index": 2,
+                    "message": "primary key is required and cannot be blank"
+                  },
+                  {
+                    "index": 3,
+                    "message": "invalid row: wrong number of fields"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "StrictReceived": {
+        "description": "A 200 response indicates all records were successfully ingested.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "num_records_imported": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 200,
+                "num_records_imported": 2000,
+                "status": "OK"
+              }
+            }
+          }
+        }
+      },
+      "StrictInvalid": {
+        "description": "A 400 response indicates that some records failed validation.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "num_records_imported": {
+                  "type": "integer"
+                },
+                "failed_records": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "number"
+                      },
+                      "insert_id": {
+                        "type": "string"
+                      },
+                      "field": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "code": 400,
+                "num_records_imported": 999,
+                "status": "Bad Request",
+                "failed_records": [
+                  {
+                    "index": 0,
+                    "insert_id": "13c0b661-f48b-51cd-ba54-97c5999169c0",
+                    "field": "properties.time",
+                    "message": "'properties.time' is invalid: must be specified as seconds since epoch"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "StrictUnauthorized": {
+        "description": "A 401 response indicates invalid credentials.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 401,
+                "error": "Invalid credentials",
+                "status": "Unauthorized"
+              }
+            }
+          }
+        }
+      },
+      "StrictNotFound": {
+        "description": "A 404 response indicates that the entity to replace was not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 200,
+                "error": "Lookup table with id 'f077cb07-008a-4955-8a4a-b4c163db3a87' was not found.",
+                "status": "Not Found"
+              }
+            }
+          }
+        }
+      },
+      "StrictTooLarge": {
+        "description": "A 413 response indicates that the payload is too large.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 413,
+                "error": "request exceeds max limit of 2097152 bytes",
+                "status": "Request Entity Too Large"
+              }
+            }
+          }
+        }
+      },
+      "RateLimitExceeded": {
+        "description": "A 429 response indicates rate limits have been exceeded.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "example": {
+                "code": 429,
+                "error": "Project exceeded rate limits. Please retry the request with exponential backoff.",
+                "status": "Too Many Requests"
+              }
+            }
+          }
+        }
+      },
+      "Received": {
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "integer",
+              "enum": [
+                1,
+                0
+              ]
+            },
+            "examples": {
+              "Valid Data": {
+                "value": 1
+              },
+              "Invalid Data": {
+                "value": 0
+              }
+            }
+          }
+        },
+        "description": "\n* `1` - One or more objects provided are valid. This does not signify a valid project token or secret.\n* `0` - No data objects in the body are invalid.\n"
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "UseIpAsDistinctId": {
+        "in": "query",
+        "name": "ip",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "description": "If present and equal to 1, Mixpanel will use the ip address of the incoming request and compute a distinct_id using a hash function if no distinct_id is provided. This is different from providing a `properties.ip` value in the Event Object."
+      },
+      "Verbose": {
+        "in": "query",
+        "name": "verbose",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "description": "If present and equal to 1, Mixpanel will respond with a JSON Object describing the success or failure of the tracking call. The returned object will have two keys: `status`, with the value 1 on success and 0 on failure, and `error`, with a string-valued error message if the request wasn't successful. This is useful for debugging during implementation."
+      },
+      "Redirect": {
+        "in": "query",
+        "name": "redirect",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "If present, Mixpanel will serve a redirect to the given url as a response to the request. This is useful to add link tracking in notifications."
+      },
+      "PNGPixel": {
+        "in": "query",
+        "name": "img",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "description": "If present and equal to 1, Mixpanel will serve a 1x1 transparent pixel image as a response to the request. This is useful for adding [Pixel Tracking](https://en.wikipedia.org/wiki/Web_beacon) in places that javascript is not supported."
+      },
+      "JavascriptWithCallback": {
+        "in": "query",
+        "name": "callback",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "If present, Mixpanel will return a `content-type: text/javascript` with a body that calls a function by value provided. This is useful for creating local callbacks to a successful track call in JavaScript."
+      }
+    }
+  },
+  "x-explorer-enabled": true,
+  "x-proxy-enabled": true,
+  "x-samples-enabled": true,
+  "x-samples-languages": [
+    "curl",
+    "node",
+    "ruby",
+    "javascript",
+    "python"
+  ]
+}

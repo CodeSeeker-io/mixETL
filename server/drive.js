@@ -3,13 +3,11 @@ import * as path from 'path';
 import * as process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
-import { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
 
 const { readFile, writeFile } = promises;
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -24,7 +22,7 @@ const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 async function loadSavedCredentialsIfExist() {
   try {
     const content = await readFile(TOKEN_PATH);
-    const credentials = JSON.parse(content.toString());
+    const credentials = JSON.parse(content);
     return google.auth.fromJSON(credentials);
   } catch (err) {
     return null;
@@ -37,11 +35,9 @@ async function loadSavedCredentialsIfExist() {
  * @param {OAuth2Client} client
  * @return {Promise<void>}
  */
-
-
-async function saveCredentials(client : OAuth2Client | JSONClient) {
+async function saveCredentials(client) {
   const content = await readFile(CREDENTIALS_PATH);
-  const keys = JSON.parse(content.toString());
+  const keys = JSON.parse(content);
   const key = keys.installed || keys.web;
   const payload = JSON.stringify({
     type: 'authorized_user',
@@ -57,7 +53,7 @@ async function saveCredentials(client : OAuth2Client | JSONClient) {
  *
  */
 async function authorize() {
-  let client: OAuth2Client | JSONClient = await loadSavedCredentialsIfExist();
+  let client = await loadSavedCredentialsIfExist();
   if (client) {
     return client;
   }
@@ -72,26 +68,26 @@ async function authorize() {
 }
 
 /**
- * Prints the names and majors of students in a sample spreadsheet:
- * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
- * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
+ * Lists the names and IDs of up to 10 files.
+ * @param {OAuth2Client} authClient An authorized OAuth2 client.
  */
-async function listMajors(auth: OAuth2Client) {
-  const sheets = google.sheets({version: 'v4', auth});
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-    range: 'Class Data!A2:E',
+async function listFiles(authClient) {
+  const drive = google.drive({version: 'v3', auth: authClient});
+  const res = await drive.files.list({
+    q: 'mimeType=\'application/vnd.google-apps.spreadsheet\'',
+    pageSize: 10,
+    fields: 'nextPageToken, files(id, name)',
   });
-  const rows = res.data.values;
-  if (!rows || rows.length === 0) {
-    console.log('No data found.');
+  const files = res.data.files;
+  if (files.length === 0) {
+    console.log('No files found.');
     return;
   }
-  console.log('Name, Major:');
-  rows.forEach((row) => {
-    // Print columns A and E, which correspond to indices 0 and 4.
-    console.log(`${row[0]}, ${row[4]}`);
+
+  console.log('Files:');
+  files.map((file) => {
+    console.log(`${file.name} (${file.id})`);
   });
 }
 
-authorize().then(listMajors).catch(console.error);
+authorize().then(listFiles).catch(console.error);

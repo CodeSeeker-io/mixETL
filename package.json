@@ -9,7 +9,11 @@
     "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
     "export": "ts-node --esm export/export.ts",
     "lint": "eslint . --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node --esm server/index.ts",
+    "mapping": "ts-node -T --esm import/sum.ts",
+    "compileTest": "ts-jest tests/mappingCopy.test.ts",
+    "js-test": "jest tests/sum.test.js"
   },
   "repository": {
     "type": "git",
@@ -22,8 +26,15 @@
   },
   "homepage": "https://github.com/CodeSeeker-io/MixETL#readme",
   "dependencies": {
+    "@api/mixpaneldevdocs": "file:.api/apis/mixpaneldevdocs",
+    "@google-cloud/local-auth": "^2.1.0",
+    "@types/gapi": "^0.0.43",
     "express": "^4.18.2",
-    "fetch": "^1.1.0"
+    "fetch": "^1.1.0",
+    "google-auth-library": "^8.7.0",
+    "googleapis": "^105.0.0",
+    "googleapis-common": "^6.0.3",
+    "node-fetch": "^3.3.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.14",

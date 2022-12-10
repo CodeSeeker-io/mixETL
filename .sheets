@@ -1,0 +1,11 @@
+{
+  "Event Data": {
+    "isColumn": false,
+    "Event Name": "Paid Tuition",
+    "timestamp": 0
+  },
+  "Property Mapping": {
+    "Student Name": "Name",
+    "Major": "Academic Major"
+  }
+}

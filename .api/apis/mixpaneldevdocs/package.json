@@ -1,0 +1,11 @@
+{
+  "name": "@api/mixpaneldevdocs",
+  "version": "1.0.0",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "api": "^5.0.4",
+    "json-schema-to-ts": "^2.6.2-beta.1",
+    "oas": "^20.1.3"
+  }
+}
