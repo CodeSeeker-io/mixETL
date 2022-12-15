@@ -4,23 +4,19 @@ import sdk, {
   ImportEventsResponse401,
   ImportEventsResponse413,
   ImportEventsResponse429,
+  ImportEventsBodyParam,
 } from '@api/mixpaneldevdocs';
-import { readFileSync } from 'fs';
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { importJSON } from '../tests/utils';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const { PROJECT_ID, SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD } = importJSON('../.mixpanel', '../');
+const { events } = importJSON('./transformed.json', '../');
 
-const { PROJECT_ID, SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD } = JSON.parse(readFileSync(resolve(__dirname, '../.mixpanel')).toString());
-const { events } = JSON.parse(readFileSync(resolve(__dirname, './transformed.json')).toString());
-
-// Add authorization credentials to skd instance
-sdk.auth(SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD);
-// Import event data from source service
-sdk.importEvents(events, {
+// Add authorization credentials to sdk instance
+sdk.auth(SERVICE_ACCOUNT as string, SERVICE_ACCOUNT_PASSWORD as string);
+// Import event data from digested source data in transform.json file
+sdk.importEvents(events as ImportEventsBodyParam, {
   strict: '1',
-  project_id: PROJECT_ID,
+  project_id: PROJECT_ID as string,
   'content-encoding': 'gzip',
 })
   .then(({ data } : { data: ImportEventsResponse200 }) => console.log(data))

@@ -8,6 +8,7 @@
     "build": "npm install && npm run mixpanel-dependencies",
     "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
     "export": "ts-node --esm export/export.ts",
+    "compileUtils": "ts-node -T --esm tests/utils.ts",
     "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node --esm server/index.ts",

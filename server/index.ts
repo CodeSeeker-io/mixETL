@@ -2,7 +2,7 @@ import { promises } from 'fs';
 import * as path from 'path';
 import * as process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
-import { google } from 'googleapis';
+import { google, sheets_v4 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
 
@@ -56,7 +56,7 @@ async function saveCredentials(client : OAuth2Client | JSONClient) {
  * Load or request or authorization to call APIs.
  *
  */
-async function authorize() {
+export async function authorize() {
   let client: OAuth2Client | JSONClient = await loadSavedCredentialsIfExist();
   if (client) {
     return client;
@@ -76,22 +76,13 @@ async function authorize() {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-async function listMajors(auth: OAuth2Client) {
-  const sheets = google.sheets({version: 'v4', auth});
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-    range: 'Class Data!A2:E',
-  });
-  const rows = res.data.values;
-  if (!rows || rows.length === 0) {
-    console.log('No data found.');
-    return;
-  }
-  console.log('Name, Major:');
-  rows.forEach((row) => {
-    // Print columns A and E, which correspond to indices 0 and 4.
-    console.log(`${row[0]}, ${row[4]}`);
-  });
+export async function listRows(
+  auth: OAuth2Client,
+  targetSheet: sheets_v4.Params$Resource$Spreadsheets$Values$Get
+) {
+  const sheets = google.sheets({ version: 'v4', auth });
+  const res = await sheets.spreadsheets.values.get(targetSheet);
+  return res.data.values;
 }
 
-authorize().then(listMajors).catch(console.error);
+// authorize().then(listRows).catch(console.error);
