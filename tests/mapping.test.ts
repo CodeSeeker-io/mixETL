@@ -1,17 +1,29 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { createInterface } from 'node:readline/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { authorizeMixpanel, createMap, getSpreadsheet } from '../import/mapping';
 
+// Mock dependencies
 jest.mock('node:readline/promises');
+jest.mock('node:fs/promises');
+
+// Declare mock types
+type FSMockType = typeof import('node:fs/promises') & { __setMockFiles: jest.Mock };
 
 const mockedCreateInterface = createInterface as jest.Mock;
+const emptyCredentials = `{
+  "PROJECT_ID": "",
+  "SERVICE_ACCOUNT": "",
+  "SERVICE_ACCOUNT_PASSWORD": ""
+}`;
 
-describe('generate spreadsheet params object from CLI input', () => {
+describe('getSpreadsheet', () => {
   beforeEach(() => {
     // Clear mocked methods before each test
     mockedCreateInterface.mockReset();
   });
 
-  test('includes all input from readline in the result object values', async () => {
+  test('generates spreadsheet params object from CLI input', async () => {
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
       question: jest.fn()
@@ -30,6 +42,77 @@ describe('generate spreadsheet params object from CLI input', () => {
     await expect(inputSpreadsheet).resolves.toEqual(expect.objectContaining({
       spreadsheetId: 'mockSpreadsheetId',
       range: 'mockRange',
+    }));
+  });
+});
+
+describe('authorizeMixpanel', () => {
+  beforeEach(async () => {
+    // Clear mocked methods before each test
+    mockedCreateInterface.mockReset();
+    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+    __setMockFiles({ './mixpanel': emptyCredentials });
+  });
+
+  test('returns saved credentials object', async () => {
+    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+
+    // Save mocked credentials in the mocked file system
+    __setMockFiles(
+      {
+        './mixpanel': `{
+        "PROJECT_ID": "savedProjectId",
+        "SERVICE_ACCOUNT": "savedServiceAccount",
+        "SERVICE_ACCOUNT_PASSWORD": "savedServiceAccountPassword"
+      }`
+      }
+    );
+
+    // Get credentials object
+    const credentials = authorizeMixpanel();
+
+    // Reads credential object saved in file system
+    expect(readFile).toBeCalledWith('/.mixpanel');
+
+    // Object should be returned when promise resolves
+    await expect(credentials).resolves.toBeInstanceOf(Object);
+
+    // Object should have the appropriate shape (Mixpanel Credentials)
+    await expect(credentials).resolves.toEqual(expect.objectContaining({
+      PROJECT_ID: 'savedProjectId',
+      SERVICE_ACCOUNT: 'savedServiceAccount',
+      SERVICE_ACCOUNT_PASSWORD: 'savedServiceAccountPassword',
+    }));
+  });
+
+  test('generates credentials object from CLI input', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    // Get credentials object
+    const credentials = authorizeMixpanel();
+
+    // Saves credential object to file system
+    expect(writeFile).toBeCalledWith('./mixpanel', `{
+      "PROJECT_ID": "mockProjectId",
+      "SERVICE_ACCOUNT": "MockServiceAccount",
+      "SERVICE_ACCOUNT_PASSWORD": "MockServiceAccountPassword"
+    }`);
+
+    // Object should be returned when promise resolves
+    await expect(credentials).resolves.toBeInstanceOf(Object);
+
+    // Object should have the appropriate shape (Mixpanel Credentials)
+    await expect(credentials).resolves.toEqual(expect.objectContaining({
+      PROJECT_ID: 'mockProjectId',
+      SERVICE_ACCOUNT: 'mockServiceAccount',
+      SERVICE_ACCOUNT_PASSWORD: 'mockServiceAccountPassword',
     }));
   });
 });

@@ -13,13 +13,6 @@ type MixpanelCredentials = {
   SERVICE_ACCOUNT: string,
   SERVICE_ACCOUNT_PASSWORD: string,
 };
-type MappingType = {
-  distinct_id: string,
-  eventName: string,
-  $insert_id: string,
-  timestamp: string,
-  custom: string[],
-};
 
 // input: headerRow from Google sheet -> [eventName, userName, favoriteSong]
 // ask the required questions:
@@ -53,7 +46,7 @@ Promise<(sheets_v4.Params$Resource$Spreadsheets$Values$Get)> => {
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
   }
-
+  rl.close();
   return input as typeof questions;
 };
 
