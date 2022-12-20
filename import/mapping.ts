@@ -2,7 +2,11 @@ import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
 
-// const createMap = (columns: Set<string>) => {};
+// export const createMap = (columns: Set<string>) => {
+
+// };
+
+// type Stage = 'Mixpanel' | 'Spreadsheet' | 'Mapping';
 
 type MixpanelCredentials = {
   PROJECT_ID: string;
@@ -21,9 +25,7 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
   for (let i = 0; i < keys.length; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
-    input[key] = await rl.question(
-      `${questions[key as keyof typeof questions]} \t`
-    );
+    input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
   }
   rl.close();
   return input as typeof questions;
@@ -69,4 +71,4 @@ getSpreadsheet();
 //   }
 // }
 
-export { createMap, authorizeMixpanel, getSpreadsheet };
+export { authorizeMixpanel, getSpreadsheet };
