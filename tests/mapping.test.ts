@@ -1,40 +1,36 @@
-import * as readline from 'node:readline/promises';
-import { createMap, getInput } from '../import/mapping.js';
+import { createInterface } from 'node:readline/promises';
+import { authorizeMixpanel, createMap, getSpreadsheet } from '../import/mapping';
 
 jest.mock('node:readline/promises');
 
-const mockedCreateInterface = readline.createInterface as jest.Mock;
+const mockedCreateInterface = createInterface as jest.Mock;
 
-describe('generate object from CLI input', () => {
+describe('generate spreadsheet params object from CLI input', () => {
   beforeEach(() => {
     // Clear mocked methods before each test
     mockedCreateInterface.mockReset();
   });
 
-  test('includes all input from readline in the result object values', () => {
-    mockedCreateInterface.mockImplementation(() => {
-      let counter = 0;
-      return {
-        question: jest.fn().mockImplementation((): Promise<string> => {
-          counter += 1;
-          return Promise.resolve(`mockInput ${counter}`);
-        }),
-        close: jest.fn().mockImplementation(() => undefined),
-      };
+  test('includes all input from readline in the result object values', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockSpreadsheetId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockRange')),
+      close: jest.fn().mockImplementation(() => undefined),
     });
-    const questions: string[] = [
-      'What is the name of your event column?',
-      'What is the name of your distinct_id column?',
-      'Do you have a time column?',
-      'What is the name of your event column?',
-    ]
-    const input = getInput(questions);
-    expect(input).resolves.toHaveLength(4);
-    expect(input).resolves.toEqual(expect.objectContaining({
-      spreadsheetId: expect.any(String),
-      range: expect.any(String),
+
+    // Get spreadsheet params object from user input
+    const inputSpreadsheet = getSpreadsheet();
+
+    // Object should be returned when promise resolves
+    await expect(inputSpreadsheet).resolves.toBeInstanceOf(Object);
+
+    // Object should have the appropriate shape (sheets_v4.Params$Resource$Spreadsheets$Values$Get)
+    await expect(inputSpreadsheet).resolves.toEqual(expect.objectContaining({
+      spreadsheetId: 'mockSpreadsheetId',
+      range: 'mockRange',
     }));
-    // expect(input).resolves.toBe(['eventName', 'distinct_id', 'n', 'eventName']);
   });
 });
 

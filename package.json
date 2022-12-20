@@ -13,7 +13,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node --esm server/index.ts",
     "mapping": "ts-node -T --esm import/sum.ts",
-    "compileTest": "ts-jest tests/mappingCopy.test.ts",
+    "compileTest": "jest tests/mapping.test.ts",
     "js-test": "jest tests/sum.test.js"
   },
   "repository": {

@@ -2,15 +2,12 @@ import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
 
-const createMap = (columns: Set<string>) => {
+export const createMap = (columns: Set<string>) => {
 
 };
 
-type Stage = 'Mixpanel' | 'Spreadsheet' | 'Mapping';
-// type SpreadsheetProperties = {
-//   spreadsheetId: string,
-//   range: string,
-// };
+// type Stage = 'Mixpanel' | 'Spreadsheet' | 'Mapping';
+
 type MixpanelCredentials = {
   PROJECT_ID: string,
   SERVICE_ACCOUNT: string,
@@ -24,36 +21,32 @@ type MappingType = {
   custom: string[],
 };
 
-const getInput = async (stage: Stage):
-Promise<(sheets_v4.Params$Resource$Spreadsheets$Values$Get | MixpanelCredentials)> => {
+// input: headerRow from Google sheet -> [eventName, userName, favoriteSong]
+// ask the required questions:
+  // name of the event column
+    // remove the that item from the input array
+    // add key/val pair to mapping object
+  // name of disctict id column
+    // remove the that item from the input array
+    // add key/val pair to mapping object
+  // loop through the remaining items in the input array and ask
+    // would you like to export this column?
+      // if yes, ask what would you like this field to be called at the destination?
+      // remove that item from the input array
+      // add key/val pair to mapping object
+// return the mapping obj
+
+export const authorizeMixpanel = async (): Promise<MixpanelCredentials> => Promise.reject();
+
+export const getSpreadsheet = async ():
+Promise<(sheets_v4.Params$Resource$Spreadsheets$Values$Get)> => {
   const input: { [key:string]: string } = {};
   const rl = readline.createInterface(stdin, stdout);
-  let questions;
-  switch (stage) {
-    case 'Mixpanel':
-      questions = {
-        PROJECT_ID: 'What is your Mixpanel Project ID?',
-        SERVICE_ACCOUNT: 'What is your Mixpanel Service Account Username?',
-        SERVICE_ACCOUNT_PASSWORD: 'What is your Mixpanel Service Account Password?',
-      } as MixpanelCredentials;
-      break;
-    case 'Spreadsheet':
-      questions = {
-        spreadsheetId: 'What is your Mixpanel Project ID?',
-        range: 'What is your Mixpanel Service Account Username?',
-      } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
-      break;
-    case 'Mapping':
-      // questions = {
-      //   eventName: 'What is the name of your event column?',
-      //   distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
-      // } as MappingType;
-      break;
-    default: {
-      rl.close();
-      // return {};
-    }
-  }
+  const questions = {
+    spreadsheetId: 'What is your Mixpanel Project ID?',
+    range: 'What is your Mixpanel Service Account Username?',
+  } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
+
   const keys = Object.keys(questions);
   for (let i = 0; i < keys.length; i += 1) {
     const key = keys[i];
@@ -61,13 +54,7 @@ Promise<(sheets_v4.Params$Resource$Spreadsheets$Values$Get | MixpanelCredentials
     input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
   }
 
-  // for (let i = 0; i < questions.length; i += 1) {
-  //   // eslint-disable-next-line no-await-in-loop
-  //   answer = await rl.question(`${questions[i]} \t`);
-  //   input.push(answer);
-  // }
-  rl.close();
   return input as typeof questions;
 };
 
-export { createMap, getInput };
+// export { createMap, getInput };
