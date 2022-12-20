@@ -2,14 +2,14 @@ import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
 
-const createMap = (columns: Set<string>) => {};
+// const createMap = (columns: Set<string>) => {};
 
+type MixpanelCredentials = {
+  PROJECT_ID: string;
+  SERVICE_ACCOUNT: string;
+  SERVICE_ACCOUNT_PASSWORD: string;
+};
 const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
-  type MixpanelCredentials = {
-    PROJECT_ID: string;
-    SERVICE_ACCOUNT: string;
-    SERVICE_ACCOUNT_PASSWORD: string;
-  };
   const input: { [key: string]: string } = {};
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
@@ -31,10 +31,6 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
 
 const getSpreadsheet =
   async (): Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
-    // type SpreadsheetProperties = {
-    //   spreadsheetId: string;
-    //   range: string;
-    // };
     const input: { [key: string]: string } = {};
     const rl = readline.createInterface(stdin, stdout);
     const questions = {
@@ -45,14 +41,12 @@ const getSpreadsheet =
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       // eslint-disable-next-line no-await-in-loop
-      input[key] = await rl.question(
-        `${questions[key as keyof typeof questions]} \t`
-      );
+      input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
     }
     rl.close();
     return input as typeof questions;
   };
-getSpreadsheet(); 
+getSpreadsheet();
 
 
 // type MappingType = {
