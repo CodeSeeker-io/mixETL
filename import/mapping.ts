@@ -22,7 +22,7 @@ type MixpanelCredentials = {
 };
 
 const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
-  /* Reads previously authorized Mixpanel credentials from the saved 
+  /* Reads previously authorized Mixpanel credentials from the saved
   .mixpanel file */
   try {
     const creds = await readFile(MIX_CRED);
@@ -54,6 +54,7 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
     return input as typeof questions;
   }
 };
+
 /* Gets user's Google Spreadsheet credentials for a specific spreadsheet */
 const getSpreadsheet =
   async (): Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
