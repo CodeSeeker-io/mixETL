@@ -51,7 +51,7 @@ describe('authorizeMixpanel', () => {
     // Clear mocked methods before each test
     mockedCreateInterface.mockReset();
     const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
-    __setMockFiles({ './mixpanel': emptyCredentials });
+    __setMockFiles({ './unusedFile': '' });
   });
 
   test('returns saved credentials object', async () => {
@@ -83,6 +83,43 @@ describe('authorizeMixpanel', () => {
       SERVICE_ACCOUNT: 'savedServiceAccount',
       SERVICE_ACCOUNT_PASSWORD: 'savedServiceAccountPassword',
     }));
+  });
+
+  test('triggers CLI input if credentials file does not exist', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn(),
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    // Call method to ensure logic completes
+    authorizeMixpanel();
+
+    // Triggers CLI prompts for credentials if file is not saved
+    expect(mockedCreateInterface().question).toBeCalledTimes(3);
+  });
+
+  test('triggers CLI input if credentials file has invalid values', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn(),
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
+        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+    __setMockFiles({ './mixpanel': emptyCredentials });
+
+    // Call method to ensure logic completes
+    authorizeMixpanel();
+
+    // Triggers CLI prompts for credentials if file is not saved
+    expect(mockedCreateInterface().question).toBeCalledTimes(3);
   });
 
   test('generates credentials object from CLI input', async () => {
