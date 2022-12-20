@@ -1,58 +1,60 @@
 import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
-import * as fs from 'node:fs';
 import { promises } from 'fs';
-import * as path from 'path'; 
-// import fs from '../__mocks__/fs';
+import * as path from 'path';
 
 const { readFile, writeFile } = promises;
 
-const createMap = (columns: Set<string>) => {
+const createMap = (columns: Set<string>) => {};
 
-};
+/* The file .mixpanel stores the user's Mixpanel credentials, and is
+created automatically when authorizeMixpanel() completes for the first
+time. If updating user's Mixpanel credentials, simply delete the .mixpanel
+file and run authorizeMixpanel() again.
+*/
 
-// type Stage = 'Mixpanel' | 'Spreadsheet' | 'Mapping';
-
+const MIX_CRED = path.join(process.cwd(), '.mixpanel');
 type MixpanelCredentials = {
   PROJECT_ID: string;
   SERVICE_ACCOUNT: string;
   SERVICE_ACCOUNT_PASSWORD: string;
 };
 
-const MIX_CRED = path.join(process.cwd(), '.mixpanel');
-
 const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
-  const mixpanel = './mixpanel';
-  if (fs.existsSync(mixpanel)) {
-    console.log('file exists')
-    const creds = await readFile(mixpanel);
+  /* Reads previously authorized Mixpanel credentials from the saved 
+  .mixpanel file */
+  try {
+    const creds = await readFile(MIX_CRED);
     const credentials = JSON.parse(creds.toString());
-    if (!Object.values(credentials).includes('')) { 
-      console.log('this is credentials', credentials);
+    if (!Object.values(credentials).includes('')) {
+      return credentials;
     }
-  } else {
+  /* Creates a new .mixpanel file containing user's Mixpanel credentials using
+  CLI user input */
+  } catch (err) {
     const input: { [key: string]: string } = {};
     const rl = readline.createInterface(stdin, stdout);
     const questions = {
       PROJECT_ID: 'What is your Mixpanel Project ID?',
       SERVICE_ACCOUNT: 'What is your Mixpanel Service Account Username?',
-      SERVICE_ACCOUNT_PASSWORD: 'What is your Mixpanel Service Account Password?',
+      SERVICE_ACCOUNT_PASSWORD:
+        'What is your Mixpanel Service Account Password?',
     } as MixpanelCredentials;
     const keys = Object.keys(questions);
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       // eslint-disable-next-line no-await-in-loop
-      input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
+      input[key] = await rl.question(
+        `${questions[key as keyof typeof questions]} \t`
+      );
     }
     rl.close();
     await writeFile(MIX_CRED, JSON.stringify(input));
-    // console.log('this is input', input)
     return input as typeof questions;
   }
 };
-authorizeMixpanel();
-
+/* Gets user's Google Spreadsheet credentials for a specific spreadsheet */
 const getSpreadsheet =
   async (): Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
     const input: { [key: string]: string } = {};
@@ -65,22 +67,21 @@ const getSpreadsheet =
     for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       // eslint-disable-next-line no-await-in-loop
-      input[key] = await rl.question(`${questions[key as keyof typeof questions]} \t`);
+      input[key] = await rl.question(
+        `${questions[key as keyof typeof questions]} \t`
+      );
     }
     rl.close();
-    console.log(input)
     return input as typeof questions;
   };
 
-// getSpreadsheet();
 // type MappingType = {
 //   distinct_id: string,
-  // eventName: string,
+// eventName: string,
 //   $insert_id: string,
 //   timestamp: string,
 //   custom: string[],
 // };
-
 
 //   case 'Mapping':
 //     // questions = {
