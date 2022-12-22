@@ -1,21 +1,18 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { createInterface } from 'node:readline/promises';
-import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'path';
+import * as fsp from 'fs/promises';
+import * as fspMockModule from '../__mocks__/fs/promises';
 import { authorizeMixpanel, createMap, getSpreadsheet } from '../import/mapping';
 
 // Mock dependencies
 jest.mock('node:readline/promises');
-jest.mock('node:fs/promises');
+jest.mock('fs/promises');
 
 // Declare mock types
-type FSMockType = typeof import('node:fs/promises') & { __setMockFiles: jest.Mock };
+type FSPMockType = typeof fspMockModule & typeof fsp;
 
 const mockedCreateInterface = createInterface as jest.Mock;
-const emptyCredentials = `{
-  "PROJECT_ID": "",
-  "SERVICE_ACCOUNT": "",
-  "SERVICE_ACCOUNT_PASSWORD": ""
-}`;
 
 describe('getSpreadsheet', () => {
   beforeEach(() => {
@@ -47,38 +44,52 @@ describe('getSpreadsheet', () => {
 });
 
 describe('authorizeMixpanel', () => {
+  // Store internal mock module method for updating mocked file system
+  const { __setMockFiles } = fsp as FSPMockType;
+
+  // Save the current work directory
+  const filepath = join(process.cwd(), '.mixpanel');
+
+  // Save empty credentials to be used in tests
+  const emptyCredentials = `{
+    "PROJECT_ID": "",
+    "SERVICE_ACCOUNT": "",
+    "SERVICE_ACCOUNT_PASSWORD": ""
+  }`;
+
   beforeEach(async () => {
     // Clear mocked methods before each test
     mockedCreateInterface.mockReset();
-    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
-    __setMockFiles({ './unusedFile': '' });
+
+    // Overwrite the mocked file system storage
+    __setMockFiles({ './emptyPath': '' });
   });
 
   test('returns saved credentials object', async () => {
-    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+    // Save empty object to be used as mocked file system storage
+    const mockFiles: { [key:string]: string } = {};
 
-    // Save mocked credentials in the mocked file system
-    __setMockFiles(
-      {
-        './mixpanel': `{
-        "PROJECT_ID": "savedProjectId",
-        "SERVICE_ACCOUNT": "savedServiceAccount",
-        "SERVICE_ACCOUNT_PASSWORD": "savedServiceAccountPassword"
-      }`
-      }
-    );
+    // Save test credentials to filepath in the storage object
+    mockFiles[filepath] = `{
+      "PROJECT_ID": "savedProjectId",
+      "SERVICE_ACCOUNT": "savedServiceAccount",
+      "SERVICE_ACCOUNT_PASSWORD": "savedServiceAccountPassword"
+    }`;
+
+    // Save mocked credential file in the mocked file system
+    __setMockFiles(mockFiles);
 
     // Get credentials object
-    const credentials = authorizeMixpanel();
+    const credentials = await authorizeMixpanel();
 
     // Reads credential object saved in file system
-    expect(readFile).toBeCalledWith('/.mixpanel');
+    expect(fsp.readFile).toBeCalledWith(filepath);
 
     // Object should be returned when promise resolves
-    await expect(credentials).resolves.toBeInstanceOf(Object);
+    expect(credentials).toBeInstanceOf(Object);
 
     // Object should have the appropriate shape (Mixpanel Credentials)
-    await expect(credentials).resolves.toEqual(expect.objectContaining({
+    expect(credentials).toEqual(expect.objectContaining({
       PROJECT_ID: 'savedProjectId',
       SERVICE_ACCOUNT: 'savedServiceAccount',
       SERVICE_ACCOUNT_PASSWORD: 'savedServiceAccountPassword',
@@ -88,15 +99,12 @@ describe('authorizeMixpanel', () => {
   test('triggers CLI input if credentials file does not exist', async () => {
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
-      question: jest.fn(),
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
-      close: jest.fn().mockImplementation(() => undefined),
+      question: jest.fn().mockImplementation((): Promise<string> => Promise.resolve('test')),
+      close: jest.fn(),
     });
 
     // Call method to ensure logic completes
-    authorizeMixpanel();
+    await authorizeMixpanel();
 
     // Triggers CLI prompts for credentials if file is not saved
     expect(mockedCreateInterface().question).toBeCalledTimes(3);
@@ -105,21 +113,41 @@ describe('authorizeMixpanel', () => {
   test('triggers CLI input if credentials file has invalid values', async () => {
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
-      question: jest.fn(),
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
-        // .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
-      close: jest.fn().mockImplementation(() => undefined),
+      question: jest.fn().mockImplementation((): Promise<string> => Promise.resolve('test')),
+      close: jest.fn(),
     });
 
-    const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+    // Save empty credentials in the mocked file system
     __setMockFiles({ './mixpanel': emptyCredentials });
 
     // Call method to ensure logic completes
-    authorizeMixpanel();
+    await authorizeMixpanel();
 
     // Triggers CLI prompts for credentials if file is not saved
     expect(mockedCreateInterface().question).toBeCalledTimes(3);
+  });
+
+  xtest('prompts for CLI input again if input has invalid values', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve(''))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockProjectId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve(''))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccount'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve(''))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockServiceAccountPassword')),
+      close: jest.fn(),
+    });
+
+    // Save empty credentials in the mocked file system
+    __setMockFiles({ './mixpanel': emptyCredentials });
+
+    // Call method to ensure logic completes
+    await authorizeMixpanel();
+
+    // Triggers CLI prompts for credentials again if empty string received
+    expect(mockedCreateInterface().question).toBeCalledTimes(6);
   });
 
   test('generates credentials object from CLI input', async () => {
@@ -133,20 +161,20 @@ describe('authorizeMixpanel', () => {
     });
 
     // Get credentials object
-    const credentials = authorizeMixpanel();
+    const credentials = await authorizeMixpanel();
 
     // Saves credential object to file system
-    expect(writeFile).toBeCalledWith('./mixpanel', `{
-      "PROJECT_ID": "mockProjectId",
-      "SERVICE_ACCOUNT": "MockServiceAccount",
-      "SERVICE_ACCOUNT_PASSWORD": "MockServiceAccountPassword"
-    }`);
+    expect(fsp.writeFile).toBeCalledWith(filepath, JSON.stringify({
+      PROJECT_ID: 'mockProjectId',
+      SERVICE_ACCOUNT: 'mockServiceAccount',
+      SERVICE_ACCOUNT_PASSWORD: 'mockServiceAccountPassword'
+    }));
 
     // Object should be returned when promise resolves
-    await expect(credentials).resolves.toBeInstanceOf(Object);
+    expect(credentials).toBeInstanceOf(Object);
 
     // Object should have the appropriate shape (Mixpanel Credentials)
-    await expect(credentials).resolves.toEqual(expect.objectContaining({
+    expect(credentials).toEqual(expect.objectContaining({
       PROJECT_ID: 'mockProjectId',
       SERVICE_ACCOUNT: 'mockServiceAccount',
       SERVICE_ACCOUNT_PASSWORD: 'mockServiceAccountPassword',
