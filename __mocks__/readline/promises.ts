@@ -1,5 +1,5 @@
 const readlineMock = jest.createMockFromModule<typeof import('readline/promises')>('readline/promises');
 
-const createInterface = jest.fn();
+export const createInterface = jest.fn();
 
-export { createInterface };
+export default readlineMock;

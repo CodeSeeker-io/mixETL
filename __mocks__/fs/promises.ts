@@ -8,7 +8,8 @@ const fsp = jest.createMockFromModule<FSMockType>('fs/promises');
 let mockFiles = Object.create(null);
 
 // Define method for saving a mocked file system
-const __setMockFiles = ((newMockFiles: { [key:string]: string }): void => {
+// eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle
+export const __setMockFiles = ((newMockFiles: { [key:string]: string }): void => {
   // Reassign mocked file system storage, inherit from null to avoid prototype properties
   mockFiles = Object.create(null);
 
@@ -20,13 +21,12 @@ const __setMockFiles = ((newMockFiles: { [key:string]: string }): void => {
 }) as jest.Mock;
 
 // Mock readFile logic to read values from mocked file system
-const readFile = jest.fn().mockImplementation((filepath: string) => Promise.resolve(mockFiles[filepath] || ''));
+export const readFile = jest.fn().mockImplementation((filepath: string) => Promise.resolve(mockFiles[filepath] || ''));
 
 // Mock writeFile logic to write values to mocked file system
-const writeFile = jest.fn().mockImplementation((filepath: string, data: string) => {
+export const writeFile = jest.fn().mockImplementation((filepath: string, data: string) => {
   mockFiles[filepath] = data;
   return Promise.resolve();
 });
 
-export { __setMockFiles, readFile, writeFile };
-// export default fsp;
+export default fsp;

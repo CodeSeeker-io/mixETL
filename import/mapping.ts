@@ -1,4 +1,4 @@
-import * as readline from 'node:readline/promises';
+import * as readline from 'readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
 import { readFile, writeFile } from 'fs/promises';

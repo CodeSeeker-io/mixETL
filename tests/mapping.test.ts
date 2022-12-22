@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { createInterface } from 'node:readline/promises';
+import { createInterface } from 'readline/promises';
 import { join } from 'path';
 import * as fsp from 'fs/promises';
 import * as fspMockModule from '../__mocks__/fs/promises';
 import { authorizeMixpanel, createMap, getSpreadsheet } from '../import/mapping';
 
 // Mock dependencies
-jest.mock('node:readline/promises');
+jest.mock('readline/promises');
 jest.mock('fs/promises');
 
 // Declare mock types

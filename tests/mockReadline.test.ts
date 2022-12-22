@@ -1,5 +1,5 @@
 // Create mock of the readline module using jest
-const readlineMock = jest.createMockFromModule<typeof import('node:readline/promises')>('node:readline/promises');
+const readlineMock = jest.createMockFromModule<typeof import('readline/promises')>('readline/promises');
 
 // Defined createInterface method as jest function, should match logic in __mocks__/readline.ts
 readlineMock.createInterface = jest.fn();
