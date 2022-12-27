@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import * as fs from 'node:fs/promises';
+import * as fs from 'fs/promises';
 
 // Declare type for mocked fs module, needed to add properties to mocked module
-type FSMockType = typeof import('node:fs/promises') & { __setMockFiles: jest.Mock };
+type FSMockType = typeof import('fs/promises') & { __setMockFiles: jest.Mock };
 
 // Declare mockFiles to act as file system storage, inherit from null to avoid prototype properties
 let mockFiles = Object.create(null);
 
 // Define the mock implementation logic for fs, should match logic in __mocks__/fs.ts
-jest.mock('node:fs/promises', () => ({
+jest.mock('fs/promises', () => ({
   // Define method for saving a mocked file system
   __setMockFiles: jest.fn().mockImplementation((newMockFiles: { [key:string]: string }) => {
     // Reassign mocked file system storage, inherit from null to avoid prototype properties
@@ -42,7 +42,7 @@ beforeAll(async () => {
   mockFiles = Object.create(null);
 
   // Import __setMockFiles files from mocked fs module
-  const { __setMockFiles } = await import('node:fs/promises') as Partial<FSMockType>;
+  const { __setMockFiles } = await import('fs/promises') as Partial<FSMockType>;
 
   // "Save" MOCK_FILE_INFO to mocked file storage
   __setMockFiles(MOCK_FILE_INFO);

@@ -1,7 +1,7 @@
-import * as readline from 'node:readline/promises';
+import * as readline from 'readline/promises';
 import { stdin, stdout } from 'node:process';
 import { sheets_v4 } from 'googleapis';
-import { promises } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 
 const { readFile, writeFile } = promises;
@@ -24,7 +24,14 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
   try {
     const creds = await readFile(MIX_CRED);
     const credentials = JSON.parse(creds.toString());
-    if (!Object.values(credentials).includes('')) {
+    const {
+      PROJECT_ID,
+      SERVICE_ACCOUNT,
+      SERVICE_ACCOUNT_PASSWORD,
+    } = credentials;
+    if (PROJECT_ID
+      && SERVICE_ACCOUNT
+      && SERVICE_ACCOUNT_PASSWORD) {
       return credentials;
     }
   /* Creates a new .mixpanel file containing user's Mixpanel credentials using
@@ -53,25 +60,25 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
 };
 
 /* Gets user's Google Spreadsheet credentials for a specific spreadsheet */
-const getSpreadsheet =
-  async (): Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
-    const input: { [key: string]: string } = {};
-    const rl = readline.createInterface(stdin, stdout);
-    const questions = {
-      spreadsheetId: 'What is your spreadsheet id',
-      range: 'What is your spreadsheet name?',
-    } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
-    const keys = Object.keys(questions);
-    for (let i = 0; i < keys.length; i += 1) {
-      const key = keys[i];
-      // eslint-disable-next-line no-await-in-loop
-      input[key] = await rl.question(
-        `${questions[key as keyof typeof questions]} \t`
-      );
-    }
-    rl.close();
-    return input as typeof questions;
-  };
+const getSpreadsheet = async ():
+Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
+  const input: { [key: string]: string } = {};
+  const rl = readline.createInterface(stdin, stdout);
+  const questions = {
+    spreadsheetId: 'What is your spreadsheet id',
+    range: 'What is your spreadsheet name?',
+  } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
+  const keys = Object.keys(questions);
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i];
+    // eslint-disable-next-line no-await-in-loop
+    input[key] = await rl.question(
+      `${questions[key as keyof typeof questions]} \t`
+    );
+  }
+  rl.close();
+  return input as typeof questions;
+};
 
 /* loop through header row and get input from user about what to put where
 digest data and export it to mixpanel  */

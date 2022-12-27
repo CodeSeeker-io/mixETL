@@ -38,7 +38,6 @@ async function loadSavedCredentialsIfExist() {
  * @return {Promise<void>}
  */
 
-
 async function saveCredentials(client : OAuth2Client | JSONClient) {
   const content = await readFile(CREDENTIALS_PATH);
   const keys = JSON.parse(content.toString());
