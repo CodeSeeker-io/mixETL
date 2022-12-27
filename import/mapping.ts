@@ -5,9 +5,6 @@ import { promises } from 'fs';
 import * as path from 'path';
 
 const { readFile, writeFile } = promises;
-
-const createMap = (columns: Set<string>) => {};
-
 /* The file .mixpanel stores the user's Mixpanel credentials, and is
 created automatically when authorizeMixpanel() completes for the first
 time. If updating user's Mixpanel credentials, simply delete the .mixpanel
@@ -76,24 +73,15 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
-// type MappingType = {
-//   distinct_id: string,
-// eventName: string,
-//   $insert_id: string,
-//   timestamp: string,
-//   custom: string[],
-// };
+/* loop through header row and get input from user about what to put where
+digest data and export it to mixpanel  */
 
-//   case 'Mapping':
-//     // questions = {
-//     //   eventName: 'What is the name of your event column?',
-//     //   distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
-//     // } as MappingType;
-//     break;
-//   default: {
-//     rl.close();
-//     // return {};
-//   }
-// }
+
+const createMap = (columns: Set<string>) => {};
+
+// questions = {
+//   eventName: 'What is the name of your event column?',
+//   distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
+// } as MappingType;
 
 export { authorizeMixpanel, createMap, getSpreadsheet };
