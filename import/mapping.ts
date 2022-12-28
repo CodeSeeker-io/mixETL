@@ -4,7 +4,6 @@ import { sheets_v4 } from 'googleapis';
 import { readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 
-const { readFile, writeFile } = promises;
 /* The file .mixpanel stores the user's Mixpanel credentials, and is
 created automatically when authorizeMixpanel() completes for the first
 time. If updating user's Mixpanel credentials, simply delete the .mixpanel
@@ -18,6 +17,7 @@ type MixpanelCredentials = {
   SERVICE_ACCOUNT_PASSWORD: string;
 };
 
+/** Refactor to fix arrow function return */
 const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
   /* Reads previously authorized Mixpanel credentials from the saved
   .mixpanel file */
@@ -82,7 +82,6 @@ Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
 
 /* loop through header row and get input from user about what to put where
 digest data and export it to mixpanel  */
-
 
 const createMap = (columns: Set<string>) => {};
 
