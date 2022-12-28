@@ -4,9 +4,8 @@ import { sheets_v4 } from 'googleapis';
 import { readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 
-// const { readFile, writeFile } = promises;
-
-const createMap = (columns: Set<string>) => {};
+const createMap = (columns: Set<string>) => {
+};
 
 /* The file .mixpanel stores the user's Mixpanel credentials, and is
 created automatically when authorizeMixpanel() completes for the first

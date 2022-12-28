@@ -12,6 +12,7 @@ jest.mock('fs/promises');
 // Declare mock types
 type FSPMockType = typeof fspMockModule & typeof fsp;
 
+// Declare label for mocked readline interface constructor
 const mockedCreateInterface = createInterface as jest.Mock;
 
 describe('getSpreadsheet', () => {
@@ -183,30 +184,69 @@ describe('authorizeMixpanel', () => {
 });
 
 describe('create mapping from CLI input', () => {
-  // const mockData: string[][] = [
-  //   ['eventName', 'hasDeclaredMajor', 'major', 'studentName', 'studentId'],
-  //   ['paidTuition', 'true', 'cs', 'Jane Smith', 'JaneSmith1050ee42'],
-  //   ['graduated', 'true', 'ps', 'Mary Doe', 'MaryDoe1060ee42'],
-  //   ['enrolled', 'false', 'li', 'Jon Smythe', 'JonSmythe1070ee42'],
-  // ];
-  // const userInput: string[] = ['eventName', 'studentId', 'n', 'y', 'n', 'y'];
-  // const map = createMap(userInput);
+  const headerRow: Set<string> = new Set([
+    'eventName', 'hasDeclaredMajor', 'major', 'studentName', 'studentId'
+  ]);
 
-  // it('should map provided string to event key', () => {
-  //   expect(map.event).toBe('eventName');
-  // });
+  beforeEach(() => {
+    // Clear mocked methods before each test
+    mockedCreateInterface.mockReset();
+  });
 
-  // it('should map provided string to distinct_id key', () => {
-  //   expect(map.distinct_id).toBe('studentName');
-  // });
+  test('should only allow strings from input set to be used for CLI', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('fakeName'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventName'))
+        .mockImplementation((): Promise<string> => Promise.resolve('test')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
 
-  // it('should map provided empty string to time key, if none provided', () => {
-  //   expect(map.time).toBe('');
-  // });
+    // Await mapping object, created with above mock input
+    const map = await createMap(headerRow);
 
-  // it('should map provided string to time key when provided', () => {
-  //   const newInput = [...userInput.slice(0, 2), 'timeColumn', ...userInput.slice(2)];
-  //   const timedMap = createMap(newInput);
-  //   expect(timedMap.time).toBe('timeColumn');
-  // });
+    // First user input should be ignored, and user reprompted with question
+    // expect(Object.keys(map)).not.toContain('fakeName');
+
+    // Acceptable user input should be used for output object
+    // expect(map.event).toBe('eventName');
+  });
+
+  test('should include time column name if user indicates there is one', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventName'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('y'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('timeColumn')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+    const mapWithTime = await createMap(new Set(['timeColumn', 'eventName', 'eventId']));
+
+  });
+
+  test('should include empty string for time key when there is not a time column', async () => {
+    const map = await createMap(headerRow);
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventName'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('n')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+  });
+
+  test('should include custom properties with user provided name when provided', async () => {
+    const map = await createMap(headerRow);
+
+  });
+
+  test('should include all user input', async () => {
+    const map = await createMap(headerRow);
+
+  });
 });
