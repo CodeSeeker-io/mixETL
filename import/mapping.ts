@@ -86,7 +86,7 @@ Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
   rl.close();
   return input as typeof questions;
 };
-
+// ..returning object that is passed to the google method
 /* loop through header row and get input from user about what to put where
 digest data and export it to mixpanel  */
 // take in a set of
