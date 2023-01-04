@@ -185,7 +185,7 @@ describe('authorizeMixpanel', () => {
 
 describe('create mapping from CLI input', () => {
   const headerRow: Set<string> = new Set([
-    'eventName', 'hasDeclaredMajor', 'major', 'studentName', 'studentId'
+    'eventName', 'hasDeclaredMajor', 'major', 'studentName', 'eventId'
   ]);
 
   beforeEach(() => {
@@ -210,7 +210,7 @@ describe('create mapping from CLI input', () => {
     // expect(Object.keys(map)).not.toContain('fakeName');
 
     // Acceptable user input should be used for output object
-    // expect(map.event).toBe('eventName');
+    // expect(map.eventName).toBe('eventName');
   });
 
   test('should include time column name if user indicates there is one', async () => {
@@ -223,12 +223,15 @@ describe('create mapping from CLI input', () => {
         .mockImplementationOnce((): Promise<string> => Promise.resolve('timeColumn')),
       close: jest.fn().mockImplementation(() => undefined),
     });
+
+    // Await mapping object, created with above mock input
     const mapWithTime = await createMap(new Set(['timeColumn', 'eventName', 'eventId']));
 
+    // Time column string should be included on the output object
+    // expect(map.timestamp).toBe('timeColumn');
   });
 
   test('should include empty string for time key when there is not a time column', async () => {
-    const map = await createMap(headerRow);
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
       question: jest.fn()
@@ -238,15 +241,69 @@ describe('create mapping from CLI input', () => {
       close: jest.fn().mockImplementation(() => undefined),
     });
 
+    // Await mapping object, created with above mock input
+    const map = await createMap(headerRow);
+
+    // Time key on the outout object should be an empty string
+    // expect(map.timestamp).toBe('');
   });
 
   test('should include custom properties with user provided name when provided', async () => {
+    // Await mapping object, created with above mock input
     const map = await createMap(headerRow);
 
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventName'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('n'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('y'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('customProp1'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('y'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('customProp2')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    // Custom key includes the appropriate number of user provided key value pairs
+    // expect(map.custom).toHaveLength(2);
+
+    // Custom key value pair match the user provided key names
+    // expect(map.custom[0]).toEqual(expect.objectContaining({
+    //   customProp1: 'hasDeclaredMajor',
+    // }));
+    // expect(map.custom[1]).toEqual(expect.objectContaining({
+    //   customProp2: 'major',
+    // }));
   });
 
   test('should include all user input', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventName'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('eventId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('n'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('y'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('customProp1'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('n'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('y'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('customProp2')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    // Await mapping object, created with above mock input
     const map = await createMap(headerRow);
 
+    // Mapping object has the appropriate shape and includes expected properties
+    // expect(map).toEqual(expect.objectContaining({
+    //   distinct_id: 'eventId',
+    //   eventName: 'eventName',
+    //   timestamp: '',
+    //   custom: [
+    //     { customProp1: 'hasDeclaredMajor' },
+    //     { customProp2: 'studentName' },
+    //   ],
+    // }));
   });
 });

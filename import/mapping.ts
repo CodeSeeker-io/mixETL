@@ -83,10 +83,10 @@ Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
 
 // type MappingType = {
 //   distinct_id: string,
-// eventName: string,
+//   eventName: string,
 //   $insert_id: string,
 //   timestamp: string,
-//   custom: string[],
+//   custom: Array<{[key:string]: string}>,
 // };
 
 //   case 'Mapping':
