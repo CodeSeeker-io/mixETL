@@ -90,17 +90,18 @@ digest data and export it to mixpanel  */
 // event anme and sinstinct id column
 // do you have a custom time column?
 // if yes, then ask the title of that column is
-// if they response 'no', then we should incloude an empty string under the key on the final output object for 'time'
-// we'd still expect hte final output object to have a time key but the valoue would just bbe an empty string
+// if they response 'no', then we should include an empty string under the key on the final output object for 'time'
+// we'd still expect hte final output object to have a time key but the value would just bbe an empty string
 
-//when the user gives a response int eh command line, it has to be one of the valoues in that set
-//repromt them if invalid response
+//when the user gives a response in the command line, it has to be one of the values in that set
+//reprompt them if invalid response
 
 //delete the values in the set as the user specifies them
-//if they specify event is thename of th event column, check if it's the set so we knowif its a valid response,and if it is in the
+//if they specify event is the name of the event column, check if it's the set so we knowif its a valid response,and if it is in the
 //set then we delete it and add it to the mapping output object
-
-const createMap = async (): Promise<MappingType> => {
+// const createMap = (columns: Set<string>) => {
+// };
+const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
