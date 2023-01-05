@@ -6,7 +6,7 @@ import { authorize, listRows } from './server/index';
 
 const main = () => (async function mixETL(): Promise<void> {
   const { PROJECT_ID, SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD } = importJSON('./.mixpanel', './');
-  // Verifty Mixpanel credentials are saved to .mixpanel file
+  // Verify Mixpanel credentials are saved to .mixpanel file
   if (!PROJECT_ID || !SERVICE_ACCOUNT || !SERVICE_ACCOUNT_PASSWORD) {
     // If credentials are not saved, ask user for them
     // await getInput('Mixpanel');

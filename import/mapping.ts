@@ -16,12 +16,13 @@ type MixpanelCredentials = {
   SERVICE_ACCOUNT: string;
   SERVICE_ACCOUNT_PASSWORD: string;
 };
+
 type MappingType = {
   distinct_id: string,
   eventName: string,
   $insert_id: string,
   timestamp: string,
-  custom: Array<{[key:string]: string}>,
+  custom: Array<{ [key:string]: string }>,
 };
 
 /** Refactor to fix arrow function return */
@@ -116,11 +117,15 @@ digest data and export it to mixpanel  */
 //if they specify event is thename of th event column, check if it's the set so we knowif its a valid response,and if it is in the 
 //set then we delete it and add it to the mapping output object 
 
-const createMap = (columns: Set<string>) => {};
+const createMap = async (): Promise<MappingType> => {
+  return
+};
 
-// const questions = {
-//   eventName: 'What is the name of your event column?',
-//   distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
-// } as MappingType;
+const questions = {
+  eventName: 'What is the name of your event column?',
+  distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
+  timestamp: 'Do you have a custom time column? ',
+  custom: 'Would you like to include ' ,
+} as MappingType;
 
 export { authorizeMixpanel, createMap, getSpreadsheet };
