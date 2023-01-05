@@ -18,11 +18,11 @@ type MixpanelCredentials = {
 };
 
 type MappingType = {
-  distinct_id: string,
-  eventName: string,
-  $insert_id: string,
-  timestamp: string,
-  custom: Array<{ [key:string]: string }>,
+  distinct_id: string;
+  eventName: string;
+  $insert_id: string;
+  timestamp: string;
+  custom: Array<{ [key: string]: string }>;
 };
 
 /** Refactor to fix arrow function return */
@@ -32,17 +32,12 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
   try {
     const creds = await readFile(MIX_CRED);
     const credentials = JSON.parse(creds.toString());
-    const {
-      PROJECT_ID,
-      SERVICE_ACCOUNT,
-      SERVICE_ACCOUNT_PASSWORD,
-    } = credentials;
-    if (PROJECT_ID
-      && SERVICE_ACCOUNT
-      && SERVICE_ACCOUNT_PASSWORD) {
+    const { PROJECT_ID, SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD } =
+      credentials;
+    if (PROJECT_ID && SERVICE_ACCOUNT && SERVICE_ACCOUNT_PASSWORD) {
       return credentials;
     }
-  /* Creates a new .mixpanel file containing user's Mixpanel credentials using
+    /* Creates a new .mixpanel file containing user's Mixpanel credentials using
   CLI user input */
   } catch (err) {
     const input: { [key: string]: string } = {};
@@ -68,64 +63,74 @@ const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
 };
 
 /* Gets user's Google Spreadsheet credentials for a specific spreadsheet */
-const getSpreadsheet = async ():
-Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
+const getSpreadsheet =
+  async (): Promise<sheets_v4.Params$Resource$Spreadsheets$Values$Get> => {
+    const input: { [key: string]: string } = {};
+    const rl = readline.createInterface(stdin, stdout);
+    const questions = {
+      spreadsheetId: 'What is your spreadsheet id',
+      range: 'What is your spreadsheet name?',
+    } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
+    const keys = Object.keys(questions);
+    for (let i = 0; i < keys.length; i += 1) {
+      const key = keys[i];
+      // eslint-disable-next-line no-await-in-loop
+      input[key] = await rl.question(
+        `${questions[key as keyof typeof questions]} \t`
+      );
+    }
+    rl.close();
+    return input as typeof questions;
+  };
+
+/* loop through header row and get input from user about what to put where
+digest data and export it to mixpanel  */
+// take in a set of
+// the column header
+// event anme and sinstinct id column
+// do you have a custom time column?
+// if yes, then ask the title of that column is
+// if they response 'no', then we should incloude an empty string under the key on the final output object for 'time'
+// we'd still expect hte final output object to have a time key but the valoue would just bbe an empty string
+
+//when the user gives a response int eh command line, it has to be one of the valoues in that set
+//repromt them if invalid response
+
+//delete the values in the set as the user specifies them
+//if they specify event is thename of th event column, check if it's the set so we knowif its a valid response,and if it is in the
+//set then we delete it and add it to the mapping output object
+
+const createMap = async (): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
-    spreadsheetId: 'What is your spreadsheet id',
-    range: 'What is your spreadsheet name?',
-  } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
+    distinct_id: "What is the name of your Mixpanel 'distinct_id' column?",
+    eventName: 'What is the name of your event column?',
+    timestamp: 'Do you have a custom time column? ',
+  } as MappingType;
+
+  // custom will be an array of objects (key/value pairs) where the key is a string and the val
+  // is a string 
+  const customQuestion = {
+    custom: 'Would you like to include' + `${}` ,
+  }; 
+
   const keys = Object.keys(questions);
+  // Loop through the 3 required properties
   for (let i = 0; i < keys.length; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
     );
+    // Then loop through the custom values that remain in the set
+    // Ask if the user wants to include these properties yes/no
+    // If YES, add a follow-up question to ask what that property should be called
+    // at the destination (Mixpanel)
   }
   rl.close();
+  // Return the output object (with updated properties)
   return input as typeof questions;
 };
-// ..returning object that is passed to the google method
-/* loop through header row and get input from user about what to put where
-digest data and export it to mixpanel  */
-// take in a set of
-// the column header 
-// event anme and sinstinct id column 
-// do you have a custom time column? 
-// if yes, then ask the title of that column is 
-// if they response 'no', then we should incloude an empty string under the key on the final output object for 'time' 
-// we'd still expect hte final output object to have a time key but the valoue would just bbe an empty string 
-
-//when the user gives a response int eh command line, it has to be one of the valoues in that set 
-//repromt them if invalid response 
-
-
-//after we go thru reaquired properties (3), then we should loop thru all remaining (custom vals remaaining in the set and ask  if they w
-// want to include these properties yes/ no 
-//if yes, then we'd need a follow up question to ask what they'd want to call that property at the destination (mixpanel)
-// once done, we hshould be able to return an input object  (with added props in objet)
-// get columns from ...; 
-// use readline to ask user questions 
-//insert id
-//custom an array of objects (key/value pairs) 
-
-// an array of objecfts where the key is a string and the value is a stirng 
-
-//delete the valuesi nt he set as the user specifies them
-//if they specify event is thename of th event column, check if it's the set so we knowif its a valid response,and if it is in the 
-//set then we delete it and add it to the mapping output object 
-
-const createMap = async (): Promise<MappingType> => {
-  return
-};
-
-const questions = {
-  eventName: 'What is the name of your event column?',
-  distinct_id: 'What is the name of your Mixpanel \'distinct_id\' column?',
-  timestamp: 'Do you have a custom time column? ',
-  custom: 'Would you like to include ' ,
-} as MappingType;
 
 export { authorizeMixpanel, createMap, getSpreadsheet };
