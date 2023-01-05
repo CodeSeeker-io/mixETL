@@ -1,23 +1,30 @@
 import { OAuth2Client } from 'google-auth-library';
-import { sheets_v4 } from 'googleapis';
-import { importJSON } from './tests/utils';
-// import { getInput } from './import/mapping';
 import { authorize, listRows } from './server/index';
+import { authorizeMixpanel, getSpreadsheet, createMap } from './import/mapping';
 
 const main = () => (async function mixETL(): Promise<void> {
-  const { PROJECT_ID, SERVICE_ACCOUNT, SERVICE_ACCOUNT_PASSWORD } = importJSON('./.mixpanel', './');
-  // Verifty Mixpanel credentials are saved to .mixpanel file
-  if (!PROJECT_ID || !SERVICE_ACCOUNT || !SERVICE_ACCOUNT_PASSWORD) {
-    // If credentials are not saved, ask user for them
-    // await getInput('Mixpanel');
-    // Run main functionality once credentials are saved
-    return main();
-  }
+  // Retrieve saved credentials or save Mixpanel credentials from user input
+  const mixpanelCredentials = await authorizeMixpanel();
 
+  // Authorize Google Sheets API
   const auth = await authorize() as OAuth2Client;
-  // const targetSheet = await getInput('Spreadsheet') as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
-  // const sheetRows = await listRows(auth, targetSheet);
-  // Pass the pass the header row into input function 
+
+  // Get the target speadsheet parameters from user input
+  const targetSheet = await getSpreadsheet();
+
+  // Load the data from the target spreadsheet
+  const sheetRows = await listRows(auth, targetSheet);
+
+  // Pass the header row of target spreadsheet to create mapping with user input
+  const map = await createMap(new Set(sheetRows[0]));
+
+  // Pass the map object and loaded spreadsheet data and digest prior to export
+  // const digested = digest(map, sheetRows);
+
+  // Save the Mixpanel credentials to the Mixpanel SDK instance
+
+  // Export the source data to the destination using Mixpanel SDK
+
   return Promise.resolve();
 }());
 
