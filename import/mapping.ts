@@ -83,55 +83,83 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
-/* loop through header row and get input from user about what to put where
-digest data and export it to mixpanel  */
-// take in a set of
-// the column header
-// event anme and sinstinct id column
-// do you have a custom time column?
-// if yes, then ask the title of that column is
-// if they response 'no', then we should include an empty string under the key on the final output object for 'time'
-// we'd still expect hte final output object to have a time key but the value would just bbe an empty string
-
-//when the user gives a response in the command line, it has to be one of the values in that set
-//reprompt them if invalid response
-
-//delete the values in the set as the user specifies them
-//if they specify event is the name of the event column, check if it's the set so we knowif its a valid response,and if it is in the
-//set then we delete it and add it to the mapping output object
-// const createMap = (columns: Set<string>) => {
-// };
+// input: Set of strings ['Company', 'Position', 'Date Applied']
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
+  const map = {} as MappingType;
+  const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
     distinct_id: "What is the name of your Mixpanel 'distinct_id' column?",
     eventName: 'What is the name of your event column?',
-    timestamp: 'Do you have a custom time column? ',
+    timestamp: 'Do you have a custom time column? y/n ',
+    custom: [],
+    // 'custom' will be an array of objects (key/value pairs of strings)
+    // such as:
+    // custom: [
+    //     { customProp1: 'hasDeclaredMajor' },
+    //     { customProp2: 'studentName' },
+    //   ],
   } as MappingType;
 
-  // custom will be an array of objects (key/value pairs) where the key is a string and the val
-  // is a string 
-  const customQuestion = {
-    custom: 'Would you like to include' + `${}` ,
-  }; 
-
   const keys = Object.keys(questions);
+  // const custom = Array<{ [key: string]: string }>;
+  const customObj: { [key: string]: string } = {};
   // Loop through the 3 required properties
-  for (let i = 0; i < keys.length; i += 1) {
+  for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
+      // If response to timestamp question is NO, then include an empty string as the val for the
     );
-    // Then loop through the custom values that remain in the set
-    // Ask if the user wants to include these properties yes/no
-    // If YES, add a follow-up question to ask what that property should be called
-    // at the destination (Mixpanel)
+    if (input.timestamp === 'y') {
+      input.timestamp = await rl.question(
+        'What is the name of your time column?'
+      );
+    } else {
+      input.timestamp = '';
+    }
   }
+  // Then loop through the custom values that remain in the set
+  columns.forEach(async (column) => {
+    // Promp readline to ask if user wants to include this column
+    const customQuestion = await rl.question(
+      'Would you like to include ' + `${column}` + '? y/n '
+    );
+    if (customQuestion === 'y') {
+      const customInput = await rl.question(
+        'What would you like to call this property at the destination?'
+      );
+      customObj[customInput] = column;
+      // {customInput = column}
+      custom.push(customObj);
+      columns.delete(column);
+    }
+    // YES or NO
+    // If YES, delete the value in the set and ask 'What would you like to call this property
+    //  at the destination?'
+    // add another custom prop and assign its val to its associated name
+    const mappedOutput: Record<string, unknown> = { ...input, custom };
+    console.log('column:', columns)
+    console.log('this is output', mappedOutput);
+    console.log('this is input', input);
+    console.log('this is custom', custom);
+  });
   rl.close();
-  // Return the output object (with updated properties)
-  return input as typeof questions;
+  return map;
+  // Return the mapped object
+  // Need to combine contents of input object and contents of custom object
+  // return {...input, ...custom };
 };
+const set: Set<string> = new Set();
+
+set.add('Company');
+set.add('Position');
+set.add('Date Applied');
+
+console.log('this is the set', set);
+
+createMap(set);
 
 export { authorizeMixpanel, createMap, getSpreadsheet };

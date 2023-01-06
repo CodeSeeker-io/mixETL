@@ -83,7 +83,6 @@ export async function listRows(
   const res = await sheets.spreadsheets.values.get(targetSheet);
   return res.data.values;
 }
-//grab the 0 index and pass the first row into mapping (be in the main script) if you go to index.ts at root, that's where all the logic 
-// would happen 
+// grab the 0 index and pass the first row into mapping (be in the main script)
 
 // authorize().then(listRows).catch(console.error);
