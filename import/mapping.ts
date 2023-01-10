@@ -102,6 +102,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
+      // if user's input is not present in the Set, then reprompt them
+      // (error handling in progress)
     );
   }
   if (input.timestamp === 'y') {
@@ -131,6 +133,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       } else if (customQuestion !== 'n' && customQuestion !== 'y') {
         // eslint-disable-next-line no-await-in-loop
         await rl.question('Please answer y/n ');
+        //refactor so that if answer is 'yes', then ask what to name this prop
+
       }
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
