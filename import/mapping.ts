@@ -111,7 +111,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
       // If response to timestamp question is NO, then include an empty string as the val for the
-    );
+      );
+    }
     if (input.timestamp === 'y') {
       input.timestamp = await rl.question(
         'What is the name of your time column?'
@@ -119,7 +120,6 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     } else {
       input.timestamp = '';
     }
-  }
 
   // Then loop through the custom values that remain in the set
   (async () => {
