@@ -120,9 +120,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     } else if (input.timestamp === 'n') {
       input.timestamp = '';
     } else { 
-    //refactor to reprompt question if answer is 'y' below
       await rl.question(
-        'Please enter answer y/n '
+        'Please enter answer y/n'
       )
     }
 
@@ -139,11 +138,11 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
           'What would you like to call this property at the destination?'
         );
         customObj[customInput] = column ;
+        // {customInput = column}
         columns.delete(column);
       } else if (customQuestion !== 'n' && customQuestion !== 'y'){
-        //refactor to reprompt question if answer is 'y' below
         await rl.question( 
-          'Please answer y/n '
+          'Please answer y/n'
         )
       }
       // YES or NO
@@ -156,17 +155,17 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       console.log('this is customObj', customObj)
       if (Object.keys(customObj).length > 0) custom.push(customObj);
       console.log('this is mappedOutput', mappedOutput);
-      console.log('this is map', map);
     }
     rl.close();
   })();
 
   // Return the mapped object
-  // return mappedOutput;
-
   // Need to combine contents of input object and contents of custom object
   // return {...input, ...custom };
+  // console.log('this is custom', custom);
+  // console.log('this is map', map);
 
+  return map;
 };
 
 const set: Set<string> = new Set();
