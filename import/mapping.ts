@@ -102,40 +102,39 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
-      );
-    }
-    if (input.timestamp === 'y') {
-      input.timestamp = await rl.question(
-        'What is the name of your time column?'
-        );
-      } else if (input.timestamp === 'n') {
-      input.timestamp = '';
-    } else { 
-      await rl.question(
-        'Please enter answer y/n '
-      )
-    }
+    );
+  }
+  if (input.timestamp === 'y') {
+    input.timestamp = await rl.question(
+      'What is the name of your time column?'
+    );
+  } else if (input.timestamp === 'n') {
+    input.timestamp = '';
+  } else {
+    await rl.question('Please enter answer y/n ');
+  }
 
   (async () => {
     for (const column of columns.values()) {
       const customObj: { [key: string]: string } = {};
+      // eslint-disable-next-line no-await-in-loop
       const customQuestion = await rl.question(
         'Would you like to include ' + `${column}` + '? y/n '
       );
       if (customQuestion === 'y') {
+        // eslint-disable-next-line no-await-in-loop
         const customInput = await rl.question(
           'What would you like to call this property at the destination?'
         );
-        customObj[customInput] = column
+        customObj[customInput] = column;
         columns.delete(column);
-      } else if (customQuestion !== 'n' && customQuestion !== 'y'){
-        await rl.question( 
-          'Please answer y/n '
-        )
+      } else if (customQuestion !== 'n' && customQuestion !== 'y') {
+        // eslint-disable-next-line no-await-in-loop
+        await rl.question('Please answer y/n ');
       }
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
-      Object.assign(map, mappedOutput)
+      Object.assign(map, mappedOutput);
       console.log(map);
     }
     rl.close();
