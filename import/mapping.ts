@@ -68,8 +68,8 @@ const getSpreadsheet =
     const input: { [key: string]: string } = {};
     const rl = readline.createInterface(stdin, stdout);
     const questions = {
-      spreadsheetId: 'What is your spreadsheet id',
-      range: 'What is your spreadsheet name?',
+      spreadsheetId: 'What is your spreadsheet id ',
+      range: 'What is your spreadsheet name? ',
     } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
     const keys = Object.keys(questions);
     for (let i = 0; i < keys.length; i += 1) {
@@ -89,7 +89,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
-    distinct_id: "What is the name of your Mixpanel 'distinct_id' column?",
+    distinct_id: 'What is the name of your Mixpanel `distinct_id` column?',
     eventName: 'What is the name of your event column?',
     timestamp: 'Do you have a custom time column? y/n ',
     custom: [],
@@ -111,7 +111,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       input.timestamp = '';
     } else { 
       await rl.question(
-        'Please enter answer y/n'
+        'Please enter answer y/n '
       )
     }
 
@@ -135,7 +135,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
       Object.assign(map, mappedOutput)
-      console.log(mappedOutput)
+      console.log(map);
     }
     rl.close();
   })();
