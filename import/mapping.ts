@@ -150,9 +150,10 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       //  at the destination?'
       // add another custom prop and assign its val to its associated name
       const mappedOutput: Record<string, unknown> = { ...input, custom };
-      console.log('column:', columns);
-      console.log('this is input', input);
-      custom.push(customObj);
+      // console.log('column:', columns);
+      // console.log('this is input', input);
+      console.log('this is customObj', customObj)
+      if (Object.keys(customObj).length > 0) custom.push(customObj);
       console.log('this is mappedOutput', mappedOutput);
     }
     rl.close();
@@ -161,8 +162,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   // Return the mapped object
   // Need to combine contents of input object and contents of custom object
   // return {...input, ...custom };
-  console.log('this is custom', custom);
-  console.log('this is map', map);
+  // console.log('this is custom', custom);
+  // console.log('this is map', map);
 
   return map;
 };
