@@ -83,10 +83,8 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
-// input: Set of strings 
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
-  // const map = {} as MappingType;
   const map = {} as MappingType;
   const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
@@ -98,7 +96,6 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   } as MappingType;
 
   const keys = Object.keys(questions);
-  // Loop through the required properties
   for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
@@ -111,33 +108,25 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         'What is the name of your time column?'
         );
       } else if (input.timestamp === 'n') {
-      // If NO, then include an empty string
       input.timestamp = '';
     } else { 
-    // if user enters anything other than yes or no
       await rl.question(
         'Please enter answer y/n'
       )
     }
 
-  // Then loop through the custom values that remain in the set
   (async () => {
     for (const column of columns.values()) {
       const customObj: { [key: string]: string } = {};
-      // Prompt readline to ask if user wants to include this column
       const customQuestion = await rl.question(
         'Would you like to include ' + `${column}` + '? y/n '
       );
-      // If YES
       if (customQuestion === 'y') {
         const customInput = await rl.question(
           'What would you like to call this property at the destination?'
         );
-        // add another custom prop and assign its val to its associated name
         customObj[customInput] = column
-        // delete the value in the set 
         columns.delete(column);
-        // if user enters anything other than yes or no
       } else if (customQuestion !== 'n' && customQuestion !== 'y'){
         await rl.question( 
           'Please answer y/n '
@@ -145,14 +134,11 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       }
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
-      
-      // copy enumerable properties of mappedOutput to the map object in the outer scope
       Object.assign(map, mappedOutput)
       console.log(mappedOutput)
     }
     rl.close();
   })();
-  // Return the mapped object 
   return map;
 };
 
