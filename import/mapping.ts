@@ -121,43 +121,46 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       input.timestamp = '';
     }
   }
+
   // Then loop through the custom values that remain in the set
-  columns.forEach(async (column) => {
-    // Promp readline to ask if user wants to include this column
-    const customQuestion = await rl.question(
-      'Would you like to include ' + `${column}` + '? y/n '
-    );
-    if (customQuestion === 'y') {
-      const customInput = await rl.question(
-        'What would you like to call this property at the destination?'
-      );
-      customObj[customInput] = column;
-      // {customInput = column}
-      custom.push(customObj);
-      columns.delete(column);
+  (async () => {
+    for (const column of columns.values()) {
+      // Prompt readline to ask if user wants to include this column
+      const customQuestion = await rl.question(
+        'Would you like to include ' + `${column}` + '? y/n'
+        );
+        if (customQuestion === 'y') {
+        const customInput = await rl.question(
+          'What would you like to call this property at the destination?'
+        );
+        customObj[customInput] = column;
+        // {customInput = column}
+        custom.push(customObj);
+        columns.delete(column);
+      }
+      // YES or NO
+      // If YES, delete the value in the set and ask 'What would you like to call this property
+      //  at the destination?'
+      // add another custom prop and assign its val to its associated name
+      const mappedOutput: Record<string, unknown> = { ...input, custom };
+      console.log('column:', columns);
+      console.log('this is output', mappedOutput);
+      console.log('this is input', input);
+      console.log('this is custom', custom);
     }
-    // YES or NO
-    // If YES, delete the value in the set and ask 'What would you like to call this property
-    //  at the destination?'
-    // add another custom prop and assign its val to its associated name
-    const mappedOutput: Record<string, unknown> = { ...input, custom };
-    console.log('column:', columns)
-    console.log('this is output', mappedOutput);
-    console.log('this is input', input);
-    console.log('this is custom', custom);
-  });
-  rl.close();
+    rl.close();
+  })();
+
   return map;
   // Return the mapped object
   // Need to combine contents of input object and contents of custom object
   // return {...input, ...custom };
 };
-const set: Set<string> = new Set();
 
+const set: Set<string> = new Set();
 set.add('Company');
 set.add('Position');
 set.add('Date Applied');
-
 console.log('this is the set', set);
 
 createMap(set);
