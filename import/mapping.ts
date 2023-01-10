@@ -104,7 +104,6 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
 
   const keys = Object.keys(questions);
   // const custom = Array<{ [key: string]: string }>;
-  const customObj: { [key: string]: string } = {};
   // Loop through the 3 required properties
   for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
@@ -125,15 +124,16 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   // Then loop through the custom values that remain in the set
   (async () => {
     for (const column of columns.values()) {
+      const customObj: { [key: string]: string } = {};
       // Prompt readline to ask if user wants to include this column
       const customQuestion = await rl.question(
         'Would you like to include ' + `${column}` + '? y/n'
-        );
-        if (customQuestion === 'y') {
+      );
+      if (customQuestion === 'y') {
         const customInput = await rl.question(
           'What would you like to call this property at the destination?'
         );
-        customObj[customInput] = column;
+        customObj[customInput] = column ;
         // {customInput = column}
         columns.delete(column);
       }
@@ -143,19 +143,19 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       // add another custom prop and assign its val to its associated name
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       console.log('column:', columns);
-      console.log('this is mappedOutput', mappedOutput);
       console.log('this is input', input);
+      custom.push(customObj);
+      console.log('this is mappedOutput', mappedOutput);
     }
     rl.close();
   })();
-  
+
   // Return the mapped object
   // Need to combine contents of input object and contents of custom object
-  custom.push(customObj);
   // return {...input, ...custom };
   console.log('this is custom', custom);
-  console.log('this is map', map)
-  
+  console.log('this is map', map);
+
   return map;
 };
 
