@@ -117,8 +117,12 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       input.timestamp = await rl.question(
         'What is the name of your time column?'
       );
-    } else {
+    } else if (input.timestamp === 'n') {
       input.timestamp = '';
+    } else { 
+      await rl.question(
+        'Please enter answer y/n'
+      )
     }
 
   // Then loop through the custom values that remain in the set
@@ -127,7 +131,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       const customObj: { [key: string]: string } = {};
       // Prompt readline to ask if user wants to include this column
       const customQuestion = await rl.question(
-        'Would you like to include ' + `${column}` + '? y/n'
+        'Would you like to include ' + `${column}` + '? y/n '
       );
       if (customQuestion === 'y') {
         const customInput = await rl.question(
@@ -136,6 +140,10 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         customObj[customInput] = column ;
         // {customInput = column}
         columns.delete(column);
+      } else if (customQuestion !== 'n' && customQuestion !== 'y'){
+        await rl.question( 
+          'Please answer y/n'
+        )
       }
       // YES or NO
       // If YES, delete the value in the set and ask 'What would you like to call this property
