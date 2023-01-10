@@ -86,6 +86,7 @@ const getSpreadsheet =
 // input: Set of strings 
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
+  // const map = {} as MappingType;
   const map = {} as MappingType;
   const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
@@ -114,7 +115,6 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       input.timestamp = '';
     } else { 
     // if user enters anything other than yes or no
-
       await rl.question(
         'Please enter answer y/n'
       )
@@ -140,22 +140,20 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         // if user enters anything other than yes or no
       } else if (customQuestion !== 'n' && customQuestion !== 'y'){
         await rl.question( 
-          'Please answer y/n'
+          'Please answer y/n '
         )
       }
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
+      
+      // copy enumerable properties of mappedOutput to the map object in the outer scope
+      Object.assign(map, mappedOutput)
       console.log(mappedOutput)
     }
     rl.close();
   })();
-  
   // Return the mapped object 
-  // return mappedOutput;
-
-  // refactor below
   return map;
-
 };
 
 const set: Set<string> = new Set();
