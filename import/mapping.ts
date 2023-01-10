@@ -83,6 +83,7 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
+/** Maps user's specified spreadsheet columns */
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
   const map = {} as MappingType;
