@@ -83,7 +83,7 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
-// input: Set of strings ['Company', 'Position', 'Date Applied']
+// input: Set of strings 
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
   const map = {} as MappingType;
@@ -94,32 +94,27 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     eventName: 'What is the name of your event column?',
     timestamp: 'Do you have a custom time column? y/n ',
     custom: [],
-    // 'custom' will be an array of objects (key/value pairs of strings)
-    // such as:
-    // custom: [
-    //     { customProp1: 'hasDeclaredMajor' },
-    //     { customProp2: 'studentName' },
-    //   ],
   } as MappingType;
 
   const keys = Object.keys(questions);
-  // const custom = Array<{ [key: string]: string }>;
-  // Loop through the 3 required properties
+  // Loop through the required properties
   for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
     input[key] = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
-      // If response to timestamp question is NO, then include an empty string as the val for the
       );
     }
     if (input.timestamp === 'y') {
       input.timestamp = await rl.question(
         'What is the name of your time column?'
-      );
-    } else if (input.timestamp === 'n') {
+        );
+      } else if (input.timestamp === 'n') {
+      // If NO, then include an empty string
       input.timestamp = '';
     } else { 
+    // if user enters anything other than yes or no
+
       await rl.question(
         'Please enter answer y/n'
       )
@@ -133,46 +128,40 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       const customQuestion = await rl.question(
         'Would you like to include ' + `${column}` + '? y/n '
       );
+      // If YES
       if (customQuestion === 'y') {
         const customInput = await rl.question(
           'What would you like to call this property at the destination?'
         );
-        customObj[customInput] = column ;
-        // {customInput = column}
+        // add another custom prop and assign its val to its associated name
+        customObj[customInput] = column
+        // delete the value in the set 
         columns.delete(column);
+        // if user enters anything other than yes or no
       } else if (customQuestion !== 'n' && customQuestion !== 'y'){
         await rl.question( 
           'Please answer y/n'
         )
       }
-      // YES or NO
-      // If YES, delete the value in the set and ask 'What would you like to call this property
-      //  at the destination?'
-      // add another custom prop and assign its val to its associated name
       const mappedOutput: Record<string, unknown> = { ...input, custom };
-      // console.log('column:', columns);
-      // console.log('this is input', input);
-      console.log('this is customObj', customObj)
       if (Object.keys(customObj).length > 0) custom.push(customObj);
-      console.log('this is mappedOutput', mappedOutput);
+      console.log(mappedOutput)
     }
     rl.close();
   })();
+  
+  // Return the mapped object 
+  // return mappedOutput;
 
-  // Return the mapped object
-  // Need to combine contents of input object and contents of custom object
-  // return {...input, ...custom };
-  // console.log('this is custom', custom);
-  // console.log('this is map', map);
-
+  // refactor below
   return map;
+
 };
 
 const set: Set<string> = new Set();
 set.add('Company');
 set.add('Position');
 set.add('Date Applied');
-console.log('this is the set', set);
 
 createMap(set);
 
