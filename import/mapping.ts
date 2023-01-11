@@ -117,7 +117,9 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   }
 
   (async () => {
-    for (const column of columns.values()) {
+    const columnVals = Array.from(columns.values());
+    for (let j = 0; j < columnVals.length; j++) {
+      const column = columnVals[j];
       const customObj: { [key: string]: string } = {};
       // eslint-disable-next-line no-await-in-loop
       const customQuestion = await rl.question(
@@ -133,8 +135,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       } else if (customQuestion !== 'n' && customQuestion !== 'y') {
         // eslint-disable-next-line no-await-in-loop
         await rl.question('Please answer y/n ');
-        //refactor so that if answer is 'yes', then ask what to name this prop
-
+        // refactor so that if answer is 'yes', then ask what to name this prop
       }
       const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
