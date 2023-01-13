@@ -83,16 +83,16 @@ const getSpreadsheet =
     return input as typeof questions;
   };
 
-/** Maps user's specified spreadsheet columns */
+/** Maps user's specified columns */
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
-  const map = {} as MappingType;
+  let map = {} as MappingType;
   const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
   const questions = {
     distinct_id: 'What is the name of your Mixpanel `distinct_id` column?',
     eventName: 'What is the name of your event column?',
-    timestamp: 'Do you have a custom time column? y/n ',
+    timestamp: 'Do you have a custom time column? y/n',
     custom: [],
   } as MappingType;
 
@@ -100,46 +100,57 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   for (let i = 0; i < keys.length - 1; i += 1) {
     const key = keys[i];
     // eslint-disable-next-line no-await-in-loop
-    input[key] = await rl.question(
+    let res = await rl.question(
       `${questions[key as keyof typeof questions]} \t`
-      // if user's input is not present in the Set, then reprompt them
-      // (error handling in progress)
     );
-  }
-  if (input.timestamp === 'y') {
-    input.timestamp = await rl.question(
-      'What is the name of your time column?'
-    );
-  } else if (input.timestamp === 'n') {
-    input.timestamp = '';
-  } else {
-    await rl.question('Please enter answer y/n ');
+    if (!columns.has(res)) {
+      if (key === 'timestamp') {
+        if (res === 'y') {
+          // eslint-disable-next-line no-await-in-loop
+          res = await rl.question('What is the name of your time column?\t');
+        } else {
+          res = '';
+        }
+        input[key] = res;
+      } else {
+        // eslint-disable-next-line no-await-in-loop
+        res = await rl.question(
+          'Spreadsheet does not contain ' + `${res}.` + 'Please re-enter\t'
+        );
+        input[key] = res;
+        columns.delete(res);
+      }
+    } else {
+      input[key] = res;
+      columns.delete(res);
+      console.log('this is the set', columns);
+    }
   }
 
   (async () => {
     const columnVals = Array.from(columns.values());
-    for (let j = 0; j < columnVals.length; j++) {
+    for (let j = 1; j < columnVals.length; j++) {
       const column = columnVals[j];
+      console.log('these are the column vals', columnVals[j]);
       const customObj: { [key: string]: string } = {};
       // eslint-disable-next-line no-await-in-loop
-      const customQuestion = await rl.question(
-        'Would you like to include ' + `${column}` + '? y/n '
+      let customQuestion = await rl.question(
+        'Would you like to include ' + `${column}` + '? y/n\t'
       );
       if (customQuestion === 'y') {
         // eslint-disable-next-line no-await-in-loop
         const customInput = await rl.question(
-          'What would you like to call this property at the destination?'
+          'What would you like to call this property at the destination?\t'
         );
         customObj[customInput] = column;
         columns.delete(column);
       } else if (customQuestion !== 'n' && customQuestion !== 'y') {
         // eslint-disable-next-line no-await-in-loop
-        await rl.question('Please answer y/n ');
+        customQuestion = await rl.question('Please answer y/n\t');
         // refactor so that if answer is 'yes', then ask what to name this prop
       }
-      const mappedOutput: Record<string, unknown> = { ...input, custom };
       if (Object.keys(customObj).length > 0) custom.push(customObj);
-      Object.assign(map, mappedOutput);
+      map = { ...input, custom } as MappingType;
       console.log(map);
     }
     rl.close();
@@ -148,6 +159,9 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
 };
 
 const set: Set<string> = new Set();
+set.add('distinct_id');
+set.add('eventName');
+set.add('timestamp');
 set.add('Company');
 set.add('Position');
 set.add('Date Applied');
