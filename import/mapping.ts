@@ -111,19 +111,17 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         } else {
           res = '';
         }
-        input[key] = res;
       } else {
         // eslint-disable-next-line no-await-in-loop
         res = await rl.question(
           'Spreadsheet does not contain ' + `${res}.` + 'Please re-enter\t'
         );
-        input[key] = res;
         columns.delete(res);
       }
+      input[key] = res;
     } else {
       input[key] = res;
       columns.delete(res);
-      console.log('this is the set', columns);
     }
   }
 
