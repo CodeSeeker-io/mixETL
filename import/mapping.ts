@@ -108,6 +108,8 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         if (res === 'y') {
           // eslint-disable-next-line no-await-in-loop
           res = await rl.question('What is the name of your time column?\t');
+          // if user has a time column in their set, find and delete it
+          columns.delete(res);
         } else {
           res = '';
         }
@@ -119,15 +121,14 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         columns.delete(res);
       }
       input[key] = res;
-    } else {
-      input[key] = res;
-      columns.delete(res);
     }
+    input[key] = res;
+    columns.delete(res);
   }
 
   (async () => {
     const columnVals = Array.from(columns.values());
-    for (let j = 1; j < columnVals.length; j++) {
+    for (let j = 0; j < columnVals.length; j++) {
       const column = columnVals[j];
       console.log('these are the column vals', columnVals[j]);
       const customObj: { [key: string]: string } = {};
@@ -159,7 +160,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
 const set: Set<string> = new Set();
 set.add('distinct_id');
 set.add('eventName');
-set.add('timestamp');
+// set.add('timestamp');
 set.add('Company');
 set.add('Position');
 set.add('Date Applied');
