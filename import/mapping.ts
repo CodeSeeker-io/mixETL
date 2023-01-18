@@ -89,64 +89,85 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   let map = {} as MappingType;
   const custom: Array<{ [key: string]: string }> = [];
   const rl = readline.createInterface(stdin, stdout);
-  const questions = {
-    distinct_id: 'What is the name of your Mixpanel `distinct_id` column?',
-    eventName: 'What is the name of your event column?',
-    timestamp: 'Do you have a custom time column? y/n',
-    custom: [],
-  } as MappingType;
+  let unsafeResponse;
 
-  const keys = Object.keys(questions);
-  for (let i = 0; i < keys.length - 1; i += 1) {
-    const key = keys[i];
-    // eslint-disable-next-line no-await-in-loop
-    let res = await rl.question(
-      `${questions[key as keyof typeof questions]} \t`
-    );
-    if (!columns.has(res)) {
-      if (key === 'timestamp') {
-        if (res === 'y') {
-          // eslint-disable-next-line no-await-in-loop
-          res = await rl.question('What is the name of your time column?\t');
-          // if user has a time column in their set, find and delete it
-          columns.delete(res);
-        } else {
-          res = '';
-        }
-      } else {
-        // eslint-disable-next-line no-await-in-loop
-        res = await rl.question(
-          'Spreadsheet does not contain ' + `${res}.` + 'Please re-enter\t'
-        );
-        columns.delete(res);
-      }
-      input[key] = res;
+  const validate = async (r: string, k: string) => {
+    let retries = 3;
+    let response = r;
+    while (!columns.has(response) && retries > 0) {
+      // eslint-disable-next-line no-await-in-loop
+      response = await rl.question(
+        `Spreadsheet does not contain ${response}. + 'Please re-enter\t`
+      );
+      retries -= 1;
     }
-    input[key] = res;
-    columns.delete(res);
+    if (columns.has(response)) {
+      input[k] = response;
+      columns.delete(response);
+      return response;
+    }
+    throw new Error();
+  };
+
+  // Prompt user for the required destination fields, start with distinct_id
+  unsafeResponse = await rl.question(
+    'What is the name of your Mixpanel `distinct_id` column? \t'
+  );
+  await validate(unsafeResponse, 'distinct_id');
+
+  // Prompt user for the event column name
+  unsafeResponse = await rl.question(
+    'What is the name of your Mixpanel `eventName` column? \t'
+  );
+  await validate(unsafeResponse, 'eventName');
+
+  // ask if timestamp
+  unsafeResponse = await rl.question(
+    'Do you have a custom time column? y/n \t'
+  );
+  if (
+    unsafeResponse.toLowerCase() === 'y'
+    || unsafeResponse.toLowerCase() === 'yes'
+  ) {
+    unsafeResponse = await rl.question('What is the name of your time column?');
+    await validate(unsafeResponse, 'timestamp');
+  } else {
+    input.timestamp = '';
   }
+
+  // Function for validating y/n that takes in two strings, response and question
+  const validateYN = async (r: string) => {
+    let retries = 3;
+    let response = r;
+    const validResponses = new Set(['y', 'yes', 'n', 'no']);
+    while (!validResponses.has(response.toLowerCase()) && retries > 0) {
+      // eslint-disable-next-line no-await-in-loop
+      response = await rl.question('Please answer y/n \t');
+      retries -= 1;
+    }
+    if (validResponses.has(response.toLowerCase())) {
+      return response === 'y' || response === 'yes';
+    }
+    throw new Error();
+  };
 
   (async () => {
     const columnVals = Array.from(columns.values());
     for (let j = 0; j < columnVals.length; j++) {
       const column = columnVals[j];
-      console.log('these are the column vals', columnVals[j]);
       const customObj: { [key: string]: string } = {};
       // eslint-disable-next-line no-await-in-loop
-      let customQuestion = await rl.question(
-        'Would you like to include ' + `${column}` + '? y/n\t'
+      unsafeResponse = await rl.question(
+        `Would you like to include ${column}? y/n \t`
       );
-      if (customQuestion === 'y') {
+      // eslint-disable-next-line no-await-in-loop
+      const includeColumn = await validateYN(unsafeResponse);
+      if (includeColumn) {
         // eslint-disable-next-line no-await-in-loop
-        const customInput = await rl.question(
+        const customKey = await rl.question(
           'What would you like to call this property at the destination?\t'
         );
-        customObj[customInput] = column;
-        columns.delete(column);
-      } else if (customQuestion !== 'n' && customQuestion !== 'y') {
-        // eslint-disable-next-line no-await-in-loop
-        customQuestion = await rl.question('Please answer y/n\t');
-        // refactor so that if answer is 'yes', then ask what to name this prop
+        customObj[customKey] = column;
       }
       if (Object.keys(customObj).length > 0) custom.push(customObj);
       map = { ...input, custom } as MappingType;
@@ -160,7 +181,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
 const set: Set<string> = new Set();
 set.add('distinct_id');
 set.add('eventName');
-// set.add('timestamp');
+set.add('timestamp');
 set.add('Company');
 set.add('Position');
 set.add('Date Applied');
