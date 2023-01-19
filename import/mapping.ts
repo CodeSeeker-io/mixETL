@@ -20,9 +20,8 @@ type MixpanelCredentials = {
 type MappingType = {
   distinct_id: string;
   eventName: string;
-  // $insert_id: string;
   timestamp: string;
-  custom: { [key: string]: string }; // should be refactored to just an object 
+  custom: { [key: string]: string };
 };
 
 /** Refactor to fix arrow function return */
