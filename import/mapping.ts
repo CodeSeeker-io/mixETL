@@ -20,9 +20,9 @@ type MixpanelCredentials = {
 type MappingType = {
   distinct_id: string;
   eventName: string;
-  $insert_id: string;
+  // $insert_id: string;
   timestamp: string;
-  custom: Array<{ [key: string]: string }>;
+  custom: { [key: string]: string }; // should be refactored to just an object 
 };
 
 /** Refactor to fix arrow function return */
@@ -87,7 +87,7 @@ const getSpreadsheet =
 const createMap = async (columns: Set<string>): Promise<MappingType> => {
   const input: { [key: string]: string } = {};
   let map = {} as MappingType;
-  const custom: Array<{ [key: string]: string }> = [];
+  const custom: { [key: string]: string } = {};
   const rl = readline.createInterface(stdin, stdout);
   let unsafeResponse;
 
@@ -97,7 +97,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     while (!columns.has(response) && retries > 0) {
       // eslint-disable-next-line no-await-in-loop
       response = await rl.question(
-        `Spreadsheet does not contain ${response}. + 'Please re-enter\t`
+        `Spreadsheet does not contain ${response}. Please re-enter\t`
       );
       retries -= 1;
     }
@@ -105,6 +105,22 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
       input[k] = response;
       columns.delete(response);
       return response;
+    }
+    throw new Error();
+  };
+
+  // Function for validating y/n that takes in one string, response
+  const validateYN = async (r: string) => {
+    let retries = 3;
+    let response = r;
+    const validResponses = new Set(['y', 'yes', 'n', 'no']);
+    while (!validResponses.has(response.toLowerCase()) && retries > 0) {
+      // eslint-disable-next-line no-await-in-loop
+      response = await rl.question('Please answer y/n \t');
+      retries -= 1;
+    }
+    if (validResponses.has(response.toLowerCase())) {
+      return response === 'y' || response === 'yes';
     }
     throw new Error();
   };
@@ -121,13 +137,13 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   );
   await validate(unsafeResponse, 'eventName');
 
-  // ask if timestamp
+  // Prompt user for custom time column
   unsafeResponse = await rl.question(
     'Do you have a custom time column? y/n \t'
   );
   if (
-    unsafeResponse.toLowerCase() === 'y'
-    || unsafeResponse.toLowerCase() === 'yes'
+    unsafeResponse.toLowerCase() === 'y' ||
+    unsafeResponse.toLowerCase() === 'yes'
   ) {
     unsafeResponse = await rl.question('What is the name of your time column?');
     await validate(unsafeResponse, 'timestamp');
@@ -135,46 +151,26 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     input.timestamp = '';
   }
 
-  // Function for validating y/n that takes in two strings, response and question
-  const validateYN = async (r: string) => {
-    let retries = 3;
-    let response = r;
-    const validResponses = new Set(['y', 'yes', 'n', 'no']);
-    while (!validResponses.has(response.toLowerCase()) && retries > 0) {
+  const columnVals = Array.from(columns.values());
+  for (let j = 0; j < columnVals.length; j += 1) {
+    const column = columnVals[j];
+    // eslint-disable-next-line no-await-in-loop
+    unsafeResponse = await rl.question(
+      `Would you like to include ${column}? y/n \t`
+    );
+    // eslint-disable-next-line no-await-in-loop
+    const includeColumn = await validateYN(unsafeResponse);
+    if (includeColumn) {
       // eslint-disable-next-line no-await-in-loop
-      response = await rl.question('Please answer y/n \t');
-      retries -= 1;
-    }
-    if (validResponses.has(response.toLowerCase())) {
-      return response === 'y' || response === 'yes';
-    }
-    throw new Error();
-  };
-
-  (async () => {
-    const columnVals = Array.from(columns.values());
-    for (let j = 0; j < columnVals.length; j++) {
-      const column = columnVals[j];
-      const customObj: { [key: string]: string } = {};
-      // eslint-disable-next-line no-await-in-loop
-      unsafeResponse = await rl.question(
-        `Would you like to include ${column}? y/n \t`
+      const customKey = await rl.question(
+        'What would you like to call this property at the destination?\t'
       );
-      // eslint-disable-next-line no-await-in-loop
-      const includeColumn = await validateYN(unsafeResponse);
-      if (includeColumn) {
-        // eslint-disable-next-line no-await-in-loop
-        const customKey = await rl.question(
-          'What would you like to call this property at the destination?\t'
-        );
-        customObj[customKey] = column;
-      }
-      if (Object.keys(customObj).length > 0) custom.push(customObj);
-      map = { ...input, custom } as MappingType;
-      console.log(map);
+      custom[customKey] = column;
     }
-    rl.close();
-  })();
+  }
+  map = { ...input, custom } as MappingType;
+  rl.close();
+  console.log(map);
   return map;
 };
 
