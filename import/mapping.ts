@@ -20,7 +20,7 @@ type MixpanelCredentials = {
 type MappingType = {
   distinct_id: string;
   eventName: string;
-  timestamp: string;
+  time: string;
   custom: { [key: string]: string };
 };
 
@@ -147,7 +147,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     unsafeResponse = await rl.question('What is the name of your time column?');
     await validate(unsafeResponse, 'timestamp');
   } else {
-    input.timestamp = '';
+    input.time = '';
   }
 
   const columnVals = Array.from(columns.values());

@@ -128,7 +128,7 @@ describe('authorizeMixpanel', () => {
     expect(mockedCreateInterface().question).toBeCalledTimes(3);
   });
 
-  xtest('prompts for CLI input again if input has invalid values', async () => {
+  test('prompts for CLI input again if input has invalid values', async () => {
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
       question: jest.fn()
@@ -207,10 +207,10 @@ describe('create mapping from CLI input', () => {
     const map = await createMap(headerRow);
 
     // First user input should be ignored, and user reprompted with question
-    // expect(Object.keys(map)).not.toContain('fakeName');
+    expect(Object.keys(map)).not.toContain('fakeName');
 
     // Acceptable user input should be used for output object
-    // expect(map.eventName).toBe('eventName');
+    expect(map.eventName).toBe('eventName');
   });
 
   test('should include time column name if user indicates there is one', async () => {
@@ -228,7 +228,7 @@ describe('create mapping from CLI input', () => {
     const mapWithTime = await createMap(new Set(['timeColumn', 'eventName', 'eventId']));
 
     // Time column string should be included on the output object
-    // expect(map.timestamp).toBe('timeColumn');
+    expect(mapWithTime.time).toBe('timeColumn');
   });
 
   test('should include empty string for time key when there is not a time column', async () => {
@@ -245,7 +245,7 @@ describe('create mapping from CLI input', () => {
     const map = await createMap(headerRow);
 
     // Time key on the outout object should be an empty string
-    // expect(map.timestamp).toBe('');
+    expect(map.time).toBe('');
   });
 
   test('should include custom properties with user provided name when provided', async () => {
@@ -266,15 +266,13 @@ describe('create mapping from CLI input', () => {
     });
 
     // Custom key includes the appropriate number of user provided key value pairs
-    // expect(map.custom).toHaveLength(2);
+    expect(map.custom).toHaveLength(2);
 
     // Custom key value pair match the user provided key names
-    // expect(map.custom[0]).toEqual(expect.objectContaining({
-    //   customProp1: 'hasDeclaredMajor',
-    // }));
-    // expect(map.custom[1]).toEqual(expect.objectContaining({
-    //   customProp2: 'major',
-    // }));
+    expect(map.custom).toEqual(expect.objectContaining({
+      customProp1: 'hasDeclaredMajor',
+      customProp2: 'major',
+    }));
   });
 
   test('should include all user input', async () => {
@@ -296,14 +294,14 @@ describe('create mapping from CLI input', () => {
     const map = await createMap(headerRow);
 
     // Mapping object has the appropriate shape and includes expected properties
-    // expect(map).toEqual(expect.objectContaining({
-    //   distinct_id: 'eventId',
-    //   eventName: 'eventName',
-    //   timestamp: '',
-    //   custom: [
-    //     { customProp1: 'hasDeclaredMajor' },
-    //     { customProp2: 'studentName' },
-    //   ],
-    // }));
+    expect(map).toEqual(expect.objectContaining({
+      distinct_id: 'eventId',
+      eventName: 'eventName',
+      time: '',
+      custom: {
+        customProp1: 'hasDeclaredMajor',
+        customProp2: 'studentName',
+      },
+    }));
   });
 });
