@@ -103,12 +103,15 @@ describe('transforms ingested data', () => {
       const distinct_idIndex = data[0].indexOf(mapping.distinct_id);
 
       // Every properties object on the event objects should have correct value from data source
-      eventArray.forEach(({ properties }, index) => {
+      eventArray.forEach(({ properties }, eventIndex) => {
         // Save the distinct_id of current property object for readibility
         const { distinct_id } = properties;
 
+        // Store the data row that will be used in test for readibility
+        const row = data[eventIndex + 1];
+
         // The distinct_id value should correspond to value in data rows (ignoring header row)
-        expect(distinct_id).toBe(data[index + 1][distinct_idIndex]);
+        expect(distinct_id).toBe(row[distinct_idIndex]);
       });
     });
   });
@@ -118,9 +121,9 @@ describe('transforms ingested data', () => {
     const mappingWithTime = { ...mapping, time: 'timeColumn' };
 
     // Update data to include time values
-    const dataWithTime = data.map((row, index) => {
+    const dataWithTime = data.map((row, rowIndex) => {
       // Add the string 'timeColumn' to the header row
-      if (index === 0) row.push('timeColumn');
+      if (rowIndex === 0) row.push('timeColumn');
 
       // Add a valid timestamp value to the non-header rows
       else row.push('1670003123567');
@@ -152,18 +155,18 @@ describe('transforms ingested data', () => {
       // Iterate over the key value pairs under the custom key (from mapping object)
       Object.entries(mapping.custom).forEach(([destinationName, sourceName]) => {
         // Store the index of the data column that corresponds to the custom property
-        const index = data[0].indexOf(sourceName);
+        const sourceIndex = data[0].indexOf(sourceName);
 
         // Add the custom property and associated data column index to the map object
-        customPropertiesMap[destinationName] = index;
+        customPropertiesMap[destinationName] = sourceIndex;
       });
 
-      eventArray.forEach(({ properties }, index) => {
+      eventArray.forEach(({ properties }, eventIndex) => {
         // Store a type safe version of the properties object
         const safeProperties = properties as { [key:string]: boolean | number | string };
 
         // Store the data row that will be used in test for readibility
-        const row = data[index + 1];
+        const row = data[eventIndex + 1];
 
         // Iterate over custom properties to test that correct values from data rows are stored
         Object.entries(customPropertiesMap).forEach(([destinationName, sourceIndex]) => {
