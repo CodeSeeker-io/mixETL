@@ -11,7 +11,7 @@ file and run authorizeMixpanel() again.
 */
 
 const MIX_CRED = path.join(process.cwd(), '.mixpanel');
-type MixpanelCredentials = {
+export type MixpanelCredentials = {
   PROJECT_ID: string;
   SERVICE_ACCOUNT: string;
   SERVICE_ACCOUNT_PASSWORD: string;

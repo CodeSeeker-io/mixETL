@@ -3,7 +3,7 @@ import { createInterface } from 'readline/promises';
 import { join } from 'path';
 import * as fsp from 'fs/promises';
 import * as fspMockModule from '../__mocks__/fs/promises';
-import { authorizeMixpanel, createMap, getSpreadsheet } from '../import/mapping';
+import { authorizeMixpanel, createMap, getSpreadsheet } from '../src/digest/mapping';
 
 // Mock dependencies
 jest.mock('readline/promises');
