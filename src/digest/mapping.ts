@@ -1,8 +1,10 @@
 import * as readline from 'readline/promises';
 import { stdin, stdout } from 'node:process';
+import { randomUUID } from 'crypto';
 import { sheets_v4 } from 'googleapis';
 import { readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
+import { ImportEventsBodyParam } from '@api/mixpaneldevdocs/types';
 
 /* The file .mixpanel stores the user's Mixpanel credentials, and is
 created automatically when authorizeMixpanel() completes for the first
@@ -11,19 +13,29 @@ file and run authorizeMixpanel() again.
 */
 
 const MIX_CRED = path.join(process.cwd(), '.mixpanel');
+
 export type MixpanelCredentials = {
   PROJECT_ID: string;
   SERVICE_ACCOUNT: string;
   SERVICE_ACCOUNT_PASSWORD: string;
 };
 
-type MappingType = {
+export type MappingType = {
   distinct_id: string;
   eventName: string;
   time: string;
   custom: { [key: string]: string };
 };
 
+type MixpanelEventType = {
+  properties: {
+    [x: string]: unknown;
+    time: number;
+    $insert_id: string;
+    distinct_id: string;
+  };
+  event: string;
+};
 /** Refactor to fix arrow function return */
 const authorizeMixpanel = async (): Promise<MixpanelCredentials> => {
   /* Reads previously authorized Mixpanel credentials from the saved
@@ -173,14 +185,57 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   return map;
 };
 
-const set: Set<string> = new Set();
-set.add('distinct_id');
-set.add('eventName');
-set.add('timestamp');
-set.add('Company');
-set.add('Position');
-set.add('Date Applied');
+const digest = (data: string[][], map: MappingType) => {
+  // Define an empty obejct to serve as a map of indexes
+  const hash: { [key: string]: number } = {};
 
-createMap(set);
+  // Store the header row for reference
+  const headerRow = data[0];
 
-export { authorizeMixpanel, createMap, getSpreadsheet };
+  // Iterate over each col in header row, and add its index to the hash map
+  headerRow.forEach((col, index) => {
+    hash[col] = index;
+  });
+
+  // Define an array of events that will be returned
+  const events: ImportEventsBodyParam = [];
+
+  // Iterate over all not header rows
+  for (let i = 1; i < data.length; i += 1) {
+    // Copy the row reference
+    const row = data[i];
+
+    // Define the event object with the required fields
+    const eventObject: MixpanelEventType = {
+      event: row[hash[map.eventName]],
+      properties: {
+        $insert_id: randomUUID(),
+        distinct_id: row[hash[map.distinct_id]],
+        time: (map.time !== '' ? row[hash[map.time]] as unknown as number : Date.now()),
+      },
+    };
+
+    // Add the custom properties to the event object
+    Object.entries(map.custom).forEach(([prop, col]) => {
+      eventObject.properties[prop] = row[hash[col]];
+    });
+
+    // Push the current event object into the events array
+    events.push(eventObject);
+  }
+
+  // Return the events array
+  return events;
+};
+
+// const set: Set<string> = new Set();
+// set.add('distinct_id');
+// set.add('eventName');
+// set.add('timestamp');
+// set.add('Company');
+// set.add('Position');
+// set.add('Date Applied');
+
+// createMap(set);
+
+export { authorizeMixpanel, createMap, digest, getSpreadsheet };
