@@ -168,7 +168,7 @@ describe('authorizeMixpanel', () => {
     expect(fsp.writeFile).toBeCalledWith(filepath, JSON.stringify({
       PROJECT_ID: 'mockProjectId',
       SERVICE_ACCOUNT: 'mockServiceAccount',
-      SERVICE_ACCOUNT_PASSWORD: 'mockServiceAccountPassword'
+      SERVICE_ACCOUNT_PASSWORD: 'mockServiceAccountPassword',
     }));
 
     // Object should be returned when promise resolves
@@ -185,7 +185,7 @@ describe('authorizeMixpanel', () => {
 
 describe('create mapping from CLI input', () => {
   const headerRow: Set<string> = new Set([
-    'eventName', 'hasDeclaredMajor', 'major', 'studentName', 'eventId'
+    'eventName', 'hasDeclaredMajor', 'major', 'studentName', 'eventId',
   ]);
 
   beforeEach(() => {
