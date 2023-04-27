@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { randomUUID } from 'crypto';
 import * as utils from './utils';
+import { MappingType, digest } from '../src/digest/mapping';
 
+// Declare mock data to use in describe blocks
 const data = [
   ['EventName', 'hasDeclaredMajor', 'Name', 'studentId'],
   ['paidTuition', 'true', 'Jane Smith', 'JaneSmith1050ee42'],
@@ -9,8 +10,9 @@ const data = [
   ['enrolled', 'false', 'Jon Smythe', 'JonSmythe1070ee42'],
 ];
 
+// Delcare a mapping object to use in describe blocks
 const mapping = {
-  event: 'EventName',
+  eventName: 'EventName',
   distinct_id: 'studentId',
   time: '',
   custom: {
@@ -19,63 +21,22 @@ const mapping = {
   },
 };
 
-// To be replaced with const declaration in describe block, store result of calling transform func
-const transformed = {
-  events: [
-    {
-      event: 'paidTuition',
-      properties: {
-        custom1: true, // from hasDeclaredMajor
-        custom2: 'Jane Smith', // from Name
-        time: '1670003123567',
-        distinct_id: 'JaneSmith1050ee42',
-        $insert_id: '8d45bbb4-c4e9-4a3a-ab22-5935243a94db',
-      },
-    },
-    {
-      event: 'graduated',
-      properties: {
-        custom1: true,
-        custom2: 'Mary Doe',
-        time: '1670003122567',
-        distinct_id: 'MaryDoe1060ee42',
-        $insert_id: '02916bdf-4b4e-4446-a1d7-32f8aceb5535',
-      },
-    },
-    {
-      event: 'enrolled',
-      properties: {
-        custom1: false,
-        custom2: 'Jon Smyth',
-        time: '1670003122267',
-        distinct_id: 'JonSmythe1070ee42',
-        $insert_id: '24c6f952-730a-420f-bace-0c79bccd52a6',
-      },
-    },
-  ],
-};
-
 describe('transforms ingested data', () => {
   describe('creates ingestion object with required properties', () => {
-    // const transformed = digest(data, mapping);
-
-    // Store the event objects from the value of events key
-    const eventArray = transformed.events;
+    // Store the transformed data that is returned from digest
+    const transformed = digest(data, mapping);
 
     test('creates object with events property', () => {
-      // Object has correct property name
-      expect(transformed).toHaveProperty('events');
-
       // Events value should be an Array
-      expect(Array.isArray(transformed.events)).toBe(true);
+      expect(Array.isArray(transformed)).toBe(true);
 
       // Events value should have the correct length
-      expect(transformed.events).toHaveLength(data.length - 1);
+      expect(transformed).toHaveLength(data.length - 1);
     });
 
     test('creates event objects with required properties', () => {
       // Each properties object on the event objects should have the required keys
-      eventArray.forEach(({ properties }) => {
+      transformed.forEach(({ properties }) => {
         expect(properties).toHaveProperty('time');
         expect(properties).toHaveProperty('distinct_id');
         expect(properties).toHaveProperty('$insert_id');
@@ -84,7 +45,7 @@ describe('transforms ingested data', () => {
 
     test('stores correct values for required properties', () => {
       // Get the properties object of every event object
-      eventArray.forEach(({ properties }) => {
+      transformed.forEach(({ properties }) => {
         // Store the values for keys to be tested
         const { $insert_id, time } = properties;
 
@@ -103,7 +64,7 @@ describe('transforms ingested data', () => {
       const distinct_idIndex = data[0].indexOf(mapping.distinct_id);
 
       // Every properties object on the event objects should have correct value from data source
-      eventArray.forEach(({ properties }, eventIndex) => {
+      transformed.forEach(({ properties }, eventIndex) => {
         // Save the distinct_id of current property object for readibility
         const { distinct_id } = properties;
 
@@ -118,7 +79,7 @@ describe('transforms ingested data', () => {
 
   describe('creates objects with timestamps based on mapping', () => {
     // Update mapping to contain a custom time column string
-    const mappingWithTime = { ...mapping, time: 'timeColumn' };
+    const mappingWithTime = { ...mapping, time: 'timeColumn' } as MappingType;
 
     // Update data to include time values
     const dataWithTime = data.map((row, rowIndex) => {
@@ -132,14 +93,12 @@ describe('transforms ingested data', () => {
       return row;
     });
 
-    // const transformed = digest(dataWithTime, mappingWithTime);
-
-    // Store the event objects from the value of events key
-    const eventArray = transformed.events;
+    // Store the event objects from the return value digest invocation
+    const transformed = digest(dataWithTime, mappingWithTime);
 
     test('stores time values from data when provided', () => {
       // Every properties object on the event objects should have correct value from data source
-      eventArray.forEach(({ properties }) => {
+      transformed.forEach(({ properties }) => {
         // Save the time of current property object for readibility
         const { time } = properties;
 
@@ -161,7 +120,7 @@ describe('transforms ingested data', () => {
         customPropertiesMap[destinationName] = sourceIndex;
       });
 
-      eventArray.forEach(({ properties }, eventIndex) => {
+      transformed.forEach(({ properties }, eventIndex) => {
         // Store a type safe version of the properties object
         const safeProperties = properties as { [key:string]: boolean | number | string };
 
