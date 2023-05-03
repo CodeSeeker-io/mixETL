@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as utils from './utils';
-import { MappingType, digest } from '../src/digest/mapping';
+import { MappingType } from '../src/digestion/mapping';
+import digest from '../src/digestion/digest';
 
 // Declare mock data to use in describe blocks
 const data = [

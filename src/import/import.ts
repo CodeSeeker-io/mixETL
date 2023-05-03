@@ -1,12 +1,10 @@
-import { promises } from 'fs';
+import { readFile, writeFile } from 'fs/promises';
 import * as path from 'path';
 import * as process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
 import { google, sheets_v4 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { JSONClient } from 'google-auth-library/build/src/auth/googleauth';
-
-const { readFile, writeFile } = promises;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
@@ -71,11 +69,11 @@ export async function authorize() {
 }
 
 /**
- * Prints the names and majors of students in a sample spreadsheet:
+ * Returns the values of the specificed target spreadsheet:
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-export async function listRows(
+export async function getRows(
   auth: OAuth2Client,
   targetSheet: sheets_v4.Params$Resource$Spreadsheets$Values$Get
 ) {
@@ -83,6 +81,3 @@ export async function listRows(
   const res = await sheets.spreadsheets.values.get(targetSheet);
   return res.data.values;
 }
-// grab the 0 index and pass the first row into mapping (be in the main script)
-
-// authorize().then(listRows).catch(console.error);
