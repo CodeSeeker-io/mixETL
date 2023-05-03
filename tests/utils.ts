@@ -1,3 +1,6 @@
+import { expect } from '@jest/globals';
+import type { MatcherFunction } from 'expect';
+
 /**
  * Test if a uuid is a non-NIL v4 UUID:
  * @example
@@ -20,3 +23,13 @@ export const isValidUUID = (s: string): boolean => {
  * @returns {boolean}
  */
 export const isValidTimestamp = (n: number): boolean => ((new Date(n)).getTime() > 0);
+
+/**
+ * Test if received value is a Jest mock function:
+ * @example
+ * isMock(jest.fn()) // => true
+ * @param  {any} received function (could be any value) to be tested
+ * @returns {boolean}
+ */
+// eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
+export const isMock = (received: any): boolean => (received && received._isMockFunction === true && typeof received.mock === 'object');
