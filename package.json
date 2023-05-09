@@ -5,15 +5,15 @@
   "main": "index.ts",
   "type": "module",
   "scripts": {
-    "build": "npm install && npm run mixpanel-dependencies",
+    "build": "npm install && npm run clean && npm run mixpanel-dependencies",
     "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
     "export": "ts-node --esm export/export.ts",
-    "compileUtils": "ts-node -T --esm tests/utils.ts",
+    "compile": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node --esm server/index.ts",
-    "mapping": "ts-node -T --esm import/sum.ts",
-    "compileTest": "jest tests/mapping.test.ts",
+    "test": "jest",
+    "clean": "tsc --build --clean && rm -rf ./.api",
+    "mixetl": "npm run build && npm run compile && npm run main",
+    "main": "node ./src/index.js",
     "js-test": "jest tests/sum.test.js"
   },
   "repository": {
