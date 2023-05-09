@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { ImportEventsBodyParam } from '@api/mixpaneldevdocs/types';
-import { MappingType } from './mapping';
+import { MappingType } from './mapping.js';
 
 type MixpanelEventType = {
   properties: {
@@ -38,7 +38,7 @@ const digest = (data: string[][], map: MappingType) => {
       properties: {
         $insert_id: randomUUID(),
         distinct_id: row[hash[map.distinct_id]],
-        time: (map.time !== '' ? row[hash[map.time]] as unknown as number : Date.now()),
+        time: (map.time !== '' ? Number(row[hash[map.time]]) : Date.now()),
       },
     };
 
