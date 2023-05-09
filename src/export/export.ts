@@ -11,7 +11,7 @@ import {
   ImportEventsResponse429,
   ImportEventsBodyParam,
 } from '@api/mixpaneldevdocs/types';
-import { MixpanelCredentials } from '../digestion/mapping';
+import { MixpanelCredentials } from '../digestion/mapping.js';
 
 export type SuccessResponse = ImportEventsResponse200;
 export type ErrorResponse = ImportEventsResponse400

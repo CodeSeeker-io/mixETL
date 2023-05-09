@@ -1,16 +1,16 @@
 import { OAuth2Client } from 'google-auth-library';
-import { authorize as authorizeGoolge, getRows } from './import/import';
+import { authorize as authorizeGoolge, getRows } from './import/import.js';
 import {
   createMap,
   getSpreadsheet,
-} from './digestion/mapping';
-import digest from './digestion/digest';
+} from './digestion/mapping.js';
+import digest from './digestion/digest.js';
 import {
   authorizeMixpanel,
   getMixpanelCredentials,
   SuccessResponse,
   ErrorResponse,
-} from './export/export';
+} from './export/export.js';
 
 export default function main() {
   return (async function mixETL(): Promise<SuccessResponse | ErrorResponse | Error> {
@@ -52,4 +52,4 @@ export default function main() {
   }());
 }
 
-// main();
+main();

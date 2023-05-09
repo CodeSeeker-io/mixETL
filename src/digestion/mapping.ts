@@ -158,7 +158,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   // If the user has a custom timestamp column
   if (includeTime) {
     // Promp user for the name of time column
-    unsafeResponse = await rl.question('What is the name of your time column?');
+    unsafeResponse = await rl.question('What is the name of your time column? \t');
 
     // Await validation of response
     await validate(unsafeResponse, 'time');
