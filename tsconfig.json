@@ -14,6 +14,8 @@
   ],
   "exclude": [
     "node_modules/**/*",
-    "./api/apis/mixpaneldevdocs/node_modules/**/*"
+    "./api/apis/mixpaneldevdocs/node_modules/**/*",
+    "__mocks__",
+    "tests/"
   ],
 }
