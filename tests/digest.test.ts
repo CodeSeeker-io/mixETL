@@ -104,7 +104,7 @@ describe('transforms ingested data', () => {
         const { time } = properties;
 
         // The time value should correspond to value in data rows (ignoring header row)
-        expect(time).toBe('1670003123567');
+        expect(time).toBe(1670003123567);
       });
     });
 
