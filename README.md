@@ -52,7 +52,7 @@ If you do not already have a Mixpanel service account for your Mixpanel project,
 For more details on setting up a Mixpanel service account, see [Service Accounts](https://developer.mixpanel.com/reference/service-accounts) 
 
 ## Troubleshooting
-For some common errors, checkout Troubleshooting.md
+For some common errors, checkout [Troubleshooting.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Troubleshooting.md)
 
 ## Contributing
 mixETL is a tool built by volunteers to make importing existing data into Mixpanel easier. We welcome contributions to the project and look forward to adding additional sources in the future. If you would like to help develop mixETL, please visit [Contributions.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Contributions.md).
