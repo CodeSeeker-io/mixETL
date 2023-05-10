@@ -4,6 +4,8 @@
 </h1>
 A simple reverse ETL tool that takes clean, processed data from Google Sheets and imports it into Mixpanel.
 
+This tool is currently only intended for users to import "events" into Mixpanel. If you are looking to stream events live or import User Profiles, you will need to find an alternative solution. We hope to add support for Mixpanel User Profiles in the future.
+
 ## To Use
 1. Download the code
 2. Add your Google credentials file to the mixETL project folder (see [Google credentials](https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#google-credentials))
