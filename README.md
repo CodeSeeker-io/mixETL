@@ -1,4 +1,7 @@
-# MixETL
+<h1 align="center">
+    <img width="540" height="160" src="logo.png" alt=""><br>
+    mixETL
+</h1>
 A simple reverse ETL tool that takes clean, processed data from Google Sheets and imports it into Mixpanel.
 
 ## To Use
