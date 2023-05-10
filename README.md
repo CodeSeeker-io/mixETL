@@ -2,8 +2,8 @@
 A simple reverse ETL tool that takes clean, processed data from Google Sheets and imports it into Mixpanel.
 
 ## To Use
-1. Download this repo
-2. Add your Google credentials file to the mixETL project folder (see [Google credentials](https://github.com/CodeSeeker-io/MixETL/edit/matthew/docs/README.md#google-credentials))
+1. Download the code
+2. Add your Google credentials file to the mixETL project folder (see [Google credentials](https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#google-credentials))
 3. Run `npm run mixetl`
 
 That's it! Now just follow the terminal instructions and you'll be walked through the workflow.
@@ -53,13 +53,13 @@ GaxiosError: The caller does not have permission
     at Gaxios._request (/Users/matthewlapeer/Desktop/MixETL/node_modules/gaxios/build/src/gaxios.js:130:23)
     at processTicksAndRejections (node:internal/process/task_queues:96:5)
 ```
-Looks like you have an error with the Google setup. Make sure to follow the steps in outlined in [setup above](https://github.com/CodeSeeker-io/MixETL/edit/matthew/docs/README.md#google-credentials).
+Looks like you have an error with the Google setup. Make sure to follow the steps in outlined in [setup above](https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#google-credentials).
 
 After completing those steps, try running the script `npm run main`.
 
 If you see the error again, try waiting 5 mins (Google Cloud may still be propegating your credential changes).
 
-If the issue persists, try runing `npm run clean` (this will restore mixETL to downloaded state), then start at Step 2 under (To Use)[https://github.com/CodeSeeker-io/MixETL/edit/matthew/docs/README.md#to-use]
+If the issue persists, try runing `npm run clean` (this will restore mixETL to downloaded state), then start at Step 2 under (To Use)[https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#to-use]
 
 ## Contributing
-mixETL is a tool built by volunteers to make importing existing data into Mixpanel easier. We welcome contributions to the project and look forward to adding additional sources in the future. If you would like to help develop mixETL, please visit our Contribution Guidelines here. 
+mixETL is a tool built by volunteers to make importing existing data into Mixpanel easier. We welcome contributions to the project and look forward to adding additional sources in the future. If you would like to help develop mixETL, please visit [Contributions.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Contributions.md).
