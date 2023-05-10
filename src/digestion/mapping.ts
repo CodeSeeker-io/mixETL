@@ -25,8 +25,8 @@ const getSpreadsheet = async (): Promise<sheets_v4.Params$Resource$Spreadsheets$
 
   // Define the questions to be presented to the user
   const questions = {
-    spreadsheetId: 'What is your spreadsheet id ',
-    range: 'What is your spreadsheet name? ',
+    spreadsheetId: 'What is your spreadsheet URL?',
+    range: 'What is your sheet name?',
   } as sheets_v4.Params$Resource$Spreadsheets$Values$Get;
 
   // Store the keys for the questions to be asked (matches params from sheets_v4)
@@ -46,6 +46,19 @@ const getSpreadsheet = async (): Promise<sheets_v4.Params$Resource$Spreadsheets$
 
   // Close the readline interface
   rl.close();
+
+  // Extract the spreadsheetId from the URL
+const url = input['spreadsheetId'];
+const regex = /\/d\/([^\/]+)/;
+const matches = url.match(regex);
+
+if (matches && matches[1]) {
+  const spreadsheetId = matches[1];
+  input['spreadsheetId'] = spreadsheetId;
+} else {
+  throw new Error('Spreadsheet id could not be found in the provided URL');
+}
+
 
   // Return the input as the type of questions obejct (same type as sheets.v4 params)
   return input as typeof questions;
