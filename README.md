@@ -20,9 +20,11 @@ That's it! Now just follow the terminal instructions and you'll be walked throug
 The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because their are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the setup. 
 ### Google credentials
 To use this tool, you will need to set up a Google Cloud project so that you can be verifed via OAuth. In order to accomplish this, users are required to have a Google Workspace and OAuth credentials set up to authorize their local machine. To set up your credentials:
-1. Create OAuth credentials
-  If you aren't sure where to start on this see [this section of the Google Cloud docs](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id)
-   - In the Google Cloud console, go to Menu > APIs & Services > Credentials
+1. Create OAuth credentials.
+
+  If you aren't sure where to start, see [this section of the Google Cloud docs](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id) and click the Go to Credentials button
+    - If you do not have a Google cloud project, you should see a Create Project button. Click on it and fill in the required fields before proceeding.
+  - In the Google Cloud console, go to Menu > APIs & Services > Credentials
   - Click Create Credentials > OAuth client ID
   - Type a name for the credential (can be anything you want)
   - Click Create
@@ -50,19 +52,7 @@ If you do not already have a Mixpanel service account for your Mixpanel project,
 For more details on setting up a Mixpanel service account, see [Service Accounts](https://developer.mixpanel.com/reference/service-accounts) 
 
 ## Troubleshooting
-### Gaxios error
-```
-GaxiosError: The caller does not have permission
-    at Gaxios._request (/Users/matthewlapeer/Desktop/MixETL/node_modules/gaxios/build/src/gaxios.js:130:23)
-    at processTicksAndRejections (node:internal/process/task_queues:96:5)
-```
-Looks like you have an error with the Google setup. Make sure to follow the steps in outlined in [setup above](https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#google-credentials).
-
-After completing those steps, try running the script `npm run main`.
-
-If you see the error again, try waiting 5 mins (Google Cloud may still be propegating your credential changes).
-
-If the issue persists, try runing `npm run clean` (this will restore mixETL to downloaded state), then start at Step 2 under (To Use)[https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#to-use]
+For some common errors, checkout Troubleshooting.md
 
 ## Contributing
 mixETL is a tool built by volunteers to make importing existing data into Mixpanel easier. We welcome contributions to the project and look forward to adding additional sources in the future. If you would like to help develop mixETL, please visit [Contributions.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Contributions.md).
