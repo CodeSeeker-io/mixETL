@@ -11,7 +11,10 @@ This tool is currently only intended for users to import "events" into Mixpanel.
 2. Add your Google credentials file to the mixETL project folder (see [Google credentials](https://github.com/CodeSeeker-io/MixETL/blob/main/README.md#google-credentials))
 3. Run `npm run mixetl`
 
-That's it! Now just follow the terminal instructions and you'll be walked through the workflow.
+That's it! Now just follow the terminal instructions and you'll be walked through the workflow:
+- enter your Mixpanel service account credentials
+- authorize your local machine to access your Google account
+- answer the questions about your source data and desired property names
 
 ## See it in action
 ![run mixetl command, and follow the prompts to complete your import](/mixetl.gif)
@@ -39,7 +42,12 @@ To use this tool, you will need to set up a Google Cloud project so that you can
   You can read more about what this is [here](https://developers.google.com/identity/protocols/oauth2/scopes)
   - Click Add to Table, and then click Update
   - Save and Continue, and then Save and Continue again. Now you can download your credentials.
-3. Download your credentials, add the downloaded file to your mixETL project folder (Note: it will be renamed to '.SECRET_sheets.json' after running `npm run mixetl` the first time)
+3. Download your credentials, add the downloaded file to your mixETL project folder
+
+Note: the crendential file will be renamed to '.SECRET_sheets.json' after running `npm run mixetl` the first time.
+You will need to allow your local machine to access this Google workspace via your browser when prompted (only on the first run)
+
+![grant access to Google when prompted](oauth.gif)
 
 For more detailed instructions on signing up and obtaining your credentials, check out [this section](https://developers.google.com/workspace/guides/get-started) of the Google dev docs. See the 'Develop on Google Workspace' section and review steps 1 and 2 under '5 steps to get started.'
 
