@@ -1,13 +1,13 @@
 ## Architecture
 
-mixETL is a blend of 3rd party APIs and custom interface to ingest, digest and export pre-cleaned data to Mixpanel. The current structure does not contain a traditional UI and offers a means for users to quickly send data to Mixpanel without passing credentials through a 3rd party. In order to accomplish this, the code has dependencies for the source data (Google Sheets) and the destination (Mixpanel). 
+mixETL is a blend of 3rd party APIs and custom interface to ingest, digest and export pre-cleaned event data to Mixpanel. The current structure does not contain a traditional UI and offers a means for users to quickly send data to Mixpanel without passing credentials through a 3rd party. In order to accomplish this, the code has dependencies for the source data (Google Sheets) and the destination (Mixpanel).
 
 ### Prepare
 To prepare your machine for development, use the `npm run build` command, which will install all the dependencies. You should see a .api directory which contains the Mixpanel API code when this step completes.
 
-Ensure that you have a Mixpanel project you can use for dev work, and that you have already established a service account for that project.
+Ensure that you have a Mixpanel project you can use for dev work, and that you have already established a [service account](https://developer.mixpanel.com/reference/service-accounts) for that project.
 
-Also ensure that you have your Google cloud credentials handy. You will need to add them as a new file named 'credentials.json' to the mixETL root directory. Dragging the file downloaded from Google workspace is the easiest way to accomplish this step.
+Also ensure that you have your Google cloud [credentials](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id) handy. You will need to add your downloaded credential json file and add it to the mixETL root directory. Dragging the file downloaded from Google workspace into your IDE is the easiest way to accomplish this step.
 
 ## Tests
 ### Running tests
