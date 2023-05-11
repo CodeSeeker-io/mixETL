@@ -1,5 +1,5 @@
 node_modules
 .DS_Store
-.mixpanel
-.sheets
-.sheetsToken
+.SECRET_mixpanel
+.SECRET_sheets.json
+.SECRET_sheetsToken.json
