@@ -1,26 +1,30 @@
 {
   "name": "mixetl",
   "version": "1.0.0",
-  "description": "A reverse ETL tool that takes clean, processed data from Google Sheets and pushes into Mixpanel.",
-  "main": "index.ts",
+  "description": "A reverse ETL tool that takes clean, processed event data from Google Sheets and imports it into Mixpanel.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=17.9.1"
+  },
   "type": "module",
   "scripts": {
     "build": "npm install && npm run clean && npm run mixpanel-dependencies",
-    "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
-    "export": "ts-node --esm export/export.ts",
+    "clean": "tsc --build --clean && rm -rf ./.api && rm -rf ./node_modules && rm -rf ./package-lock.json",
     "compile": "tsc",
     "lint": "eslint . --ext .ts",
-    "test": "jest",
-    "clean": "tsc --build --clean && rm -rf ./.api",
-    "mixetl": "npm run build && npm run compile && npm run main",
     "main": "node ./src/index.js",
-    "js-test": "jest tests/sum.test.js"
+    "mixetl": "npm run build && npm run compile && npm run main",
+    "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CodeSeeker-io/MixETL.git"
   },
-  "author": "",
+  "maintainers": [
+    "Matthew Lapeer <matthew.lapeer@gmail.com> (https://github.com/matthewlapeer)",
+    "Emilia Yoffie <emiliayoffie@gmail.com> (https://github.com/emiliayoffie)"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/CodeSeeker-io/MixETL/issues"
