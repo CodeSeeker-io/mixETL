@@ -14,9 +14,7 @@ This tool is currently only intended for users to import "events" into Mixpanel.
 That's it! Now just follow the terminal instructions and you'll be walked through the workflow.
 
 ## See it in action
-### Get mixETL
-### Download and load Google Credentials
-### Run script
+![run mixetl command, and follow the prompts to complete your import](https://im3.ezgif.com/tmp/ezgif-3-a79a175f4e.gif)
 
 ## Setup
 The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because their are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the setup. 
@@ -24,7 +22,7 @@ The architecture of this app means that all requests are processed on your machi
 To use this tool, you will need to set up a Google Cloud project so that you can be verifed via OAuth. In order to accomplish this, users are required to have a Google Workspace and OAuth credentials set up to authorize their local machine. To set up your credentials:
 1. Create OAuth credentials.
 
-  If you aren't sure where to start, see [this section of the Google Cloud docs](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id) and click the Go to Credentials button
+  If you aren't sure where to start, see [this section](https://developers.google.com/workspace/guides/create-credentials#oauth-client-id) of the Google Cloud docs and click the Go to Credentials button
     - If you do not have a Google cloud project, you should see a Create Project button. Click on it and fill in the required fields before proceeding.
   - In the Google Cloud console, go to Menu > APIs & Services > Credentials
   - Click Create Credentials > OAuth client ID
@@ -41,9 +39,9 @@ To use this tool, you will need to set up a Google Cloud project so that you can
   You can read more about what this is [here](https://developers.google.com/identity/protocols/oauth2/scopes)
   - Click Add to Table, and then click Update
   - Save and Continue, and then Save and Continue again. Now you can download your credentials.
-3. Download your credentials, add the downloaded file to your mixETL project folder and rename it 'credentials.json'
+3. Download your credentials, add the downloaded file to your mixETL project folder (Note: it will be renamed to '.SECRET_sheets.json' after running `npm run mixetl` the first time)
 
-For more detailed instructions on signing up and obtaining your credentials, check out [this section of the Google dev docs] (https://developers.google.com/workspace/guides/get-started) See the 'Develop on Google Workspace' section and review steps 1 and 2 under '5 steps to get started.'
+For more detailed instructions on signing up and obtaining your credentials, check out [this section](https://developers.google.com/workspace/guides/get-started) of the Google dev docs. See the 'Develop on Google Workspace' section and review steps 1 and 2 under '5 steps to get started.'
 
 ### Mixpanel service account
 If you do not already have a Mixpanel service account for your Mixpanel project, you will need to set one up. To do so:
@@ -52,6 +50,9 @@ If you do not already have a Mixpanel service account for your Mixpanel project,
 3. Save your credentials from the Create Service Account modal (you won't have access to the password after closing the modal)
 
 For more details on setting up a Mixpanel service account, see [Service Accounts](https://developer.mixpanel.com/reference/service-accounts) 
+
+### Data format
+Data in your sheet should contain a header row, where each cell describes the column. You should have a column that identifies your distinct id and event name. To learn more about required properties and preparing data for import to Mixpanel, check out their docs [here](https://developer.mixpanel.com/reference/import-events). Limitation: mixETL does not currently support user provided '$insert_id'.  
 
 ## Troubleshooting
 For some common errors, checkout [Troubleshooting.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Troubleshooting.md)
