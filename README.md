@@ -14,7 +14,7 @@ This tool is currently only intended for users to import "events" into Mixpanel.
 That's it! Now just follow the terminal instructions and you'll be walked through the workflow.
 
 ## See it in action
-![run mixetl command, and follow the prompts to complete your import](https://im3.ezgif.com/tmp/ezgif-3-a79a175f4e.gif)
+![run mixetl command, and follow the prompts to complete your import](/mixetl.gif)
 
 ## Setup
 The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because their are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the setup. 
