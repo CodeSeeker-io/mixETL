@@ -19,14 +19,14 @@ export type ErrorResponse = ImportEventsResponse400
 | ImportEventsResponse413
 | ImportEventsResponse429;
 
-/* The file .mixpanel stores the user's Mixpanel credentials, and is
+/* The file .SECRET_mixpanel stores the user's Mixpanel credentials, and is
 created automatically when authorizeMixpanel() is called for the first
 time. If updating user's Mixpanel credentials, simply delete the .mixpanel
 file and run authorizeMixpanel() again.
 */
 
-// Store the path of the .mixpanel file
-const MIX_CRED = path.join(process.cwd(), '.mixpanel');
+// Store the path of the .SECRET_mixpanel file
+const MIX_CRED = path.join(process.cwd(), '.SECRET_mixpanel');
 
 
 /* Returns the user's Mixpanel Credentials saved in fs,

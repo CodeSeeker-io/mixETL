@@ -14,11 +14,27 @@ describe('getSpreadsheet', () => {
     mockedCreateInterface.mockReset();
   });
 
+  test('throws if invalid URL is passed', async () => {
+    // Implement mocked readline for user input
+    mockedCreateInterface.mockReturnValue({
+      question: jest.fn()
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('https://this.url.will.not.work'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockRange')),
+      close: jest.fn().mockImplementation(() => undefined),
+    });
+
+    // Get spreadsheet params object from user input
+    const inputSpreadsheet = getSpreadsheet();
+
+    // Error should be returned from promise when it rejects
+    await expect(inputSpreadsheet).rejects.toThrow(new Error('Spreadsheet id could not be found in the provided URL'));
+  });
+
   test('generates spreadsheet params object from CLI input', async () => {
     // Implement mocked readline for user input
     mockedCreateInterface.mockReturnValue({
       question: jest.fn()
-        .mockImplementationOnce((): Promise<string> => Promise.resolve('mockSpreadsheetId'))
+        .mockImplementationOnce((): Promise<string> => Promise.resolve('https://mock.url.com/d/mockSpreadsheetId/thisIsFake'))
         .mockImplementationOnce((): Promise<string> => Promise.resolve('mockRange')),
       close: jest.fn().mockImplementation(() => undefined),
     });

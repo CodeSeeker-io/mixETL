@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, readdir, rename } from 'fs/promises';
 import * as path from 'path';
 import * as process from 'process';
 import { authenticate } from '@google-cloud/local-auth';
@@ -11,8 +11,9 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = path.join(process.cwd(), 'token.json');
-const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
+const TOKEN_PATH = path.join(process.cwd(), '.SECRET_sheetsToken.json');
+const CREDENTIALS_FILENAME = '.SECRET_sheets.json'
+const CREDENTIALS_PATH = path.join(process.cwd(), CREDENTIALS_FILENAME);
 
 /**
  * Reads previously authorized credentials from the save file.
@@ -49,6 +50,26 @@ async function saveCredentials(client : OAuth2Client | JSONClient) {
   await writeFile(TOKEN_PATH, payload);
 }
 
+async function handleInitalRun() {
+  // Define regex to match downloaded credentials from Google cloud project (OAuth credentials)
+  const regex = /^(?=.*client_secret_)(?=.*apps\.googleusercontent\.com\.json).*$/;
+
+  // Store an array of strings representing all files in the root directory
+  const files = await readdir(process.cwd());
+
+  // Store an array of files that match the regex
+  const regexMatches = files.filter(path => path.match(regex) !== null);
+
+  // Store an array of files that match CREDENTIALS_FILENAME
+  const existingCreds = files.filter(name => name === CREDENTIALS_FILENAME);
+
+  // If the target file was found, rename it
+  if (regexMatches[0] !== undefined && regexMatches[0] !== CREDENTIALS_PATH) rename(regexMatches[0], CREDENTIALS_PATH);
+
+  // Else if (target not found) and no file matching the CREDENTIAL_PATH is found then throw
+  else if (existingCreds[0] === undefined) throw new Error('Google credentials not found');
+}
+
 /**
  * Load or request or authorization to call APIs.
  *
@@ -58,6 +79,7 @@ export async function authorize() {
   if (client) {
     return client;
   }
+  await handleInitalRun();
   client = await authenticate({
     scopes: SCOPES,
     keyfilePath: CREDENTIALS_PATH,
