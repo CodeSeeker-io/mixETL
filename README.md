@@ -58,4 +58,4 @@ Data in your sheet should contain a header row, where each cell describes the co
 For some common errors, checkout [Troubleshooting.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Troubleshooting.md)
 
 ## Contributing
-mixETL is a tool built by volunteers to make importing existing data into Mixpanel easier. We welcome contributions to the project and look forward to adding additional sources in the future. If you would like to help develop mixETL, please visit [Contributions.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Contributions.md).
+mixETL is a tool built by [volunteers](https://github.com/CodeSeeker-io/MixETL/graphs/contributors) to make importing existing event data into Mixpanel easier. We welcome contributions to the project and look forward to supporting additional data sources in the future. If you would like to help develop mixETL, please visit [Contributions.md](https://github.com/CodeSeeker-io/MixETL/blob/main/Contributions.md).
