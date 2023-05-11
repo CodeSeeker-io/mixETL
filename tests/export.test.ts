@@ -26,7 +26,7 @@ describe('authorizeMixpanel', () => {
   const { __setMockFiles } = fsp as FSPMockType;
 
   // Save the current work directory
-  const filepath = join(process.cwd(), '.mixpanel');
+  const filepath = join(process.cwd(), '.SECRET_mixpanel');
 
   // Save empty credentials to be used in tests
   const emptyCredentials = `{
