@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img width="540" height="160" src="logo.png" alt=""><br>
+    <img width="540" height="160" src="assets/logo.png" alt=""><br>
 </h1>
 
 *mixETL is a simple reverse ETL tool that takes clean, processed data from Google Sheets and imports it into Mixpanel.*
@@ -19,7 +19,7 @@ That's it! Follow the terminal instructions and you'll be walked through the wor
 - Answer the questions about your source data and desired property names
 
 ## See it in action
-![run mixetl command, and follow the prompts to complete your import](/mixetl.gif)
+![run mixetl command, and follow the prompts to complete your import](/assets/mixetl.gif)
 
 ## Setup
 The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because there are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the setup. 
@@ -49,7 +49,7 @@ To use mixETL, you will need to set up a Google Cloud project so that you can be
 Note: the crendential file will be renamed to **'.SECRET_sheets.json'** after running `npm run mixetl` the first time.
 You will need to allow your local machine to access this Google workspace via your browser when prompted (only on the first run)
 
-![grant access to Google when prompted](oauth.gif)
+![grant access to Google when prompted](/assets/oauth.gif)
 
 For more detailed instructions on signing up and obtaining your credentials, check out [this section](https://developers.google.com/workspace/guides/get-started) of the Google dev docs. See the **'Develop on Google Workspace'** section and review steps 1 and 2 under '5 steps to get started.'
 
