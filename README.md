@@ -57,7 +57,7 @@ For more detailed instructions on signing up and obtaining your credentials, che
 If you do not already have a Mixpanel service account for your Mixpanel project, you will need to set one up. To do so:
 1. Navigate to your **'Organization Settings'** or **'Project settings'**
 2. Select **'Service Accounts' > '+ Add Service Account'**
-3. **Save your credential**s from the Create Service Account modal (you won't have access to the password after closing the modal)
+3. **Save your credential** from the Create Service Account modal (you won't have access to the password after closing the modal)
 
 For more details on setting up a Mixpanel service account, see [Service Accounts](https://developer.mixpanel.com/reference/service-accounts) 
 
