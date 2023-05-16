@@ -21,8 +21,8 @@ That's it! Follow the terminal instructions and you'll be walked through the wor
 ## See it in action
 ![run mixetl command, and follow the prompts to complete your import](/mixetl.gif)
 
-## Set-up
-The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because there are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the set-up. 
+## Setup
+The architecture of this app means that all requests are processed on your machine, directly between you and Google. Likewise, all Mixpanel requests are sent directly between you and Mixpanel. This architecture ensures users' privacy and keeps the tool free because there are no server hosting costs. The trade-off with this approach is that it requires users to ensure their Google Workspace and Mixpanel Project are both prepped to handle these requests. This section will help you with the setup. 
 ### Google credentials
 To use mixETL, you will need to set up a Google Cloud project so that you can be verifed via OAuth. In order to accomplish this, users are required to have a Google Workspace and OAuth credentials set up to authorize their local machine. To set up your credentials:
 1. Create OAuth credentials.
