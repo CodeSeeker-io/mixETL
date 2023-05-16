@@ -4,7 +4,7 @@
   "description": "A reverse ETL tool that takes clean, processed event data from Google Sheets and imports it into Mixpanel.",
   "main": "index.js",
   "engines": {
-    "node": ">=17.9.1"
+    "node": ">=18.0.0"
   },
   "type": "module",
   "scripts": {
@@ -34,29 +34,20 @@
     "@api/mixpaneldevdocs": "file:.api/apis/mixpaneldevdocs",
     "@google-cloud/local-auth": "^2.1.0",
     "@types/gapi": "^0.0.43",
-    "express": "^4.18.2",
-    "fetch": "^1.1.0",
     "google-auth-library": "^8.7.0",
     "googleapis": "^105.0.0",
-    "googleapis-common": "^6.0.3",
-    "node-fetch": "^3.3.0"
+    "googleapis-common": "^6.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.14",
     "@types/jest": "^29.2.3",
     "@types/node": "^18.11.10",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "eslint": "^8.28.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
+    "eslint": "^8.40.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
-    "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
-    "eslint": "^8.28.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-import": "^2.27.5",
     "jest": "^29.3.1",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
