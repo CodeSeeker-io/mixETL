@@ -4,7 +4,7 @@
   "description": "A reverse ETL tool that takes clean, processed event data from Google Sheets and imports it into Mixpanel.",
   "main": "index.js",
   "engines": {
-    "node": ">=17.9.1"
+    "node": ">=18.0.0"
   },
   "type": "module",
   "scripts": {
