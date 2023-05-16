@@ -28,7 +28,6 @@ file and run authorizeMixpanel() again.
 // Store the path of the .SECRET_mixpanel file
 const MIX_CRED = path.join(process.cwd(), '.SECRET_mixpanel');
 
-
 /* Returns the user's Mixpanel Credentials saved in fs,
 or prompts user for the credentials, saves them to fs, then returns them */
 const getCredentials = async (): Promise<MixpanelCredentials> => {
@@ -66,7 +65,7 @@ const getCredentials = async (): Promise<MixpanelCredentials> => {
       let response = r;
 
       while (!response && retries > 0) {
-      // Repromt user for a valid response
+      // Reprompt user for a valid response
       // eslint-disable-next-line no-await-in-loop
         response = await rl.question(
           'Credentials cannot be empty. Please re-enter\t',
@@ -76,7 +75,7 @@ const getCredentials = async (): Promise<MixpanelCredentials> => {
         retries -= 1;
       }
 
-      // If a valid response is not entered after 3 attemps, throw error
+      // If a valid response is not entered after 3 attempts, throw error
       if (retries === 0 && !response) {
         throw new Error('You have not entered valid responses.\nPlease review your credentials and try running the script again.');
       }
