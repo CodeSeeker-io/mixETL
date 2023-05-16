@@ -77,7 +77,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
   // Store a reference to new createInterface instance
   const rl = readline.createInterface(stdin, stdout);
 
-  // Decalre variable to store unvalidated responses
+  // Declare variable to store unvalidated responses
   let unsafeResponse;
 
   // Define function to validate CLI inputs
@@ -88,7 +88,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     let response = r;
 
     while (!columns.has(response) && retries > 0) {
-      // Repromt user for a valid response
+      // Reprompt user for a valid response
       // eslint-disable-next-line no-await-in-loop
       response = await rl.question(
         `Spreadsheet does not contain ${response}. Please re-enter\t`,
@@ -136,12 +136,12 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     // Ensure response is lowercase
     response = response.toLowerCase();
 
-    // If a valid response is not entered after 3 attemps, throw error
+    // If a valid response is not entered after 3 attempts, throw error
     if (retries === 0 && validResponses.has(response)) {
       throw new Error('You have not entered valid responses. \nValid responses to questions ending with `Y/N` are `yes` or `no`.\nIf you would like to continue, please try running the script again.');
     }
 
-    // Return a Boolean represeting the Y/N value (false for no)
+    // Return a Boolean representing the Y/N value (false for no)
     return response === 'y' || response === 'yes';
   };
 
@@ -150,7 +150,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
     'What is the name of your Mixpanel `eventName` column? \t',
   );
 
-  // Await validation of the response, will repromt if response is invalid
+  // Await validation of the response, will reprompt if response is invalid
   await validate(unsafeResponse, 'eventName');
 
   // Prompt user for the required destination fields, start with distinct_id
@@ -170,7 +170,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
 
   // If the user has a custom timestamp column
   if (includeTime) {
-    // Promp user for the name of time column
+    // Prompt user for the name of time column
     unsafeResponse = await rl.question('What is the name of your time column? \t');
 
     // Await validation of response
@@ -206,7 +206,7 @@ const createMap = async (columns: Set<string>): Promise<MappingType> => {
         'What would you like to call this property at the destination?\t',
       );
 
-      // Add the custom property to the custom obejct, column header is the value
+      // Add the custom property to the custom object, column header is the value
       custom[customKey] = column;
     }
   }

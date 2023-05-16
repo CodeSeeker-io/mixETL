@@ -11,7 +11,7 @@ const data = [
   ['enrolled', 'false', 'Jon Smythe', 'JonSmythe1070ee42'],
 ];
 
-// Delcare a mapping object to use in describe blocks
+// Declare a mapping object to use in describe blocks
 const mapping = {
   eventName: 'EventName',
   distinct_id: 'studentId',
@@ -66,10 +66,10 @@ describe('transforms ingested data', () => {
 
       // Every properties object on the event objects should have correct value from data source
       transformed.forEach(({ properties }, eventIndex) => {
-        // Save the distinct_id of current property object for readibility
+        // Save the distinct_id of current property object for readability
         const { distinct_id } = properties;
 
-        // Store the data row that will be used in test for readibility
+        // Store the data row that will be used in test for readability
         const row = data[eventIndex + 1];
 
         // The distinct_id value should correspond to value in data rows (ignoring header row)
@@ -100,7 +100,7 @@ describe('transforms ingested data', () => {
     test('stores time values from data when provided', () => {
       // Every properties object on the event objects should have correct value from data source
       transformed.forEach(({ properties }) => {
-        // Save the time of current property object for readibility
+        // Save the time of current property object for readability
         const { time } = properties;
 
         // The time value should correspond to value in data rows (ignoring header row)
@@ -125,7 +125,7 @@ describe('transforms ingested data', () => {
         // Store a type safe version of the properties object
         const safeProperties = properties as { [key:string]: boolean | number | string };
 
-        // Store the data row that will be used in test for readibility
+        // Store the data row that will be used in test for readability
         const row = data[eventIndex + 1];
 
         // Iterate over custom properties to test that correct values from data rows are stored

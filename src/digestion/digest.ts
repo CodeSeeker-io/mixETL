@@ -13,7 +13,7 @@ type MixpanelEventType = {
 };
 
 const digest = (data: string[][], map: MappingType) => {
-  // Define an empty obejct to serve as a map of indexes
+  // Define an empty object to serve as a map of indexes
   const hash: { [key: string]: number } = {};
 
   // Store the header row for reference
