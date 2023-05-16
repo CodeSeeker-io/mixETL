@@ -1,0 +1,56 @@
+{
+  "name": "mixetl",
+  "version": "1.0.0",
+  "description": "A reverse ETL tool that takes clean, processed event data from Google Sheets and imports it into Mixpanel.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "npm install && npm run clean && npm run mixpanel-dependencies",
+    "clean": "tsc --build --clean && rm -rf ./.api && rm -rf ./node_modules && rm -rf ./package-lock.json",
+    "compile": "tsc",
+    "lint": "eslint . --ext .ts",
+    "main": "node ./src/index.js",
+    "mixetl": "npm run build && npm run compile && npm run main",
+    "mixpanel-dependencies": "echo y | npx api install @mixpaneldevdocs/v3.08#260uf4wkzq3unav -l js-cjs",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeSeeker-io/MixETL.git"
+  },
+  "maintainers": [
+    "Matthew Lapeer <matthew.lapeer@gmail.com> (https://github.com/matthewlapeer)",
+    "Emilia Yoffie <emiliayoffie@gmail.com> (https://github.com/emiliayoffie)"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeSeeker-io/MixETL/issues"
+  },
+  "homepage": "https://github.com/CodeSeeker-io/MixETL#readme",
+  "dependencies": {
+    "@api/mixpaneldevdocs": "file:.api/apis/mixpaneldevdocs",
+    "@google-cloud/local-auth": "^2.1.0",
+    "@types/gapi": "^0.0.43",
+    "google-auth-library": "^8.7.0",
+    "googleapis": "^105.0.0",
+    "googleapis-common": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.14",
+    "@types/jest": "^29.2.3",
+    "@types/node": "^18.11.10",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
+    "eslint": "^8.40.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "jest": "^29.3.1",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
+  }
+}
